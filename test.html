@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌈 厚少彩虹反馈工作台 V1.3</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #4FACFE 0%, #00F2FE 100%);
+            --success-gradient: linear-gradient(135deg, #43E97B 0%, #38F9D7 100%);
+            --glass-bg: rgba(255, 255, 255, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.8);
+            --text-main: #2C3E50;
+            --text-light: #546E7A;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text-main); margin: 0; padding: 20px; min-height: 100vh; box-sizing: border-box; display: flex; justify-content: center; align-items: flex-start; background-color: #f6f9fc; background-image: radial-gradient(at 10% 20%, rgba(224,195,252,0.6) 0px, transparent 50%), radial-gradient(at 80% 0%, rgba(142,197,252,0.6) 0px, transparent 50%), radial-gradient(at 0% 50%, rgba(255,221,225,0.6) 0px, transparent 50%), radial-gradient(at 80% 50%, rgba(238,156,167,0.4) 0px, transparent 50%), radial-gradient(at 0% 100%, rgba(161,196,253,0.5) 0px, transparent 50%); }
+        .main-wrapper { display: flex; gap: 20px; width: 100%; max-width: 1400px; align-items: flex-start; }
+        .panel { background: var(--glass-bg); backdrop-filter: blur(24px) saturate(120%); padding: 25px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 16px 40px rgba(0,0,0,0.04); display: flex; flex-direction: column; }
+        .left-panel { flex: 5.5; }
+        .right-panel { flex: 4.5; position: sticky; top: 20px; height: calc(100vh - 40px); background: rgba(255,255,255,0.8); display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+        .tab-header { display: flex; background: rgba(0,0,0,0.03); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: none; cursor: pointer; font-weight: bold; color: var(--text-light); transition: all 0.3s; font-size: 14px; }
+        .tab-btn.active { color: #1E88E5; background: #fff; box-shadow: inset 0 -3px 0 #1E88E5; }
+        .tab-content { flex: 1; display: none; flex-direction: column; padding: 20px; overflow: hidden; }
+        .tab-content.active { display: flex; }
+        h1 { margin: 0 0 20px 0; color: #1E88E5; font-size: 22px; font-weight: 800; }
+        .section { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed rgba(0,0,0,0.08); }
+        .section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .section-title { font-weight: 700; margin-bottom: 12px; font-size: 14px; color: #1565C0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 6px; color: var(--text-light); font-size: 13px; font-weight: 500; }
+        input[type="text"], select, textarea { width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.9); border-radius: 10px; box-sizing: border-box; font-size: 14px; color: var(--text-main); outline: none; transition: all 0.3s; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { border-color: #4FACFE; background: #fff; }
+        .radio-group, .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px 15px; }
+        .radio-item, .checkbox-item { display: flex; align-items: center; font-size: 13px; cursor: pointer; color: #444; }
+        .grid-custom { display: grid; grid-template-columns: 1.5fr 1fr 1.5fr 1fr; gap: 15px; }
+        /* 错误标注区 */
+        .error-section { background: rgba(255,255,255,0.6); border-radius: 14px; padding: 14px; border: 1px solid rgba(0,0,0,0.06); margin-bottom: 10px; }
+        .error-section-header { font-size: 13px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .badge-word   { background: #E3F2FD; color: #1565C0; }
+        .badge-phrase { background: #FFF3E0; color: #E65100; }
+        .error-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .content-tag { background: rgba(0,0,0,0.06); border-radius: 8px; padding: 5px 10px; font-size: 13px; flex-shrink: 0; max-width: 150px; word-break: break-all; }
+        .reason-input { flex: 1; padding: 6px 10px; background: rgba(255,255,255,0.8); border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; font-size: 13px; outline: none; font-family: inherit; min-width: 0; }
+        .reason-input:focus { border-color: #4FACFE; background: #fff; }
+        .reason-input.required-empty { border-color: #EF5350 !important; background: #FFF8F8 !important; }
+        .remove-btn { background: none; border: none; cursor: pointer; color: #bbb; font-size: 16px; padding: 2px 4px; flex-shrink: 0; }
+        .remove-btn:hover { color: #EF5350; }
+        .error-empty { font-size: 12px; color: #bbb; text-align: center; padding: 6px 0; }
+        /* 课文 */
+        .textbook-content { flex: 1; background: #fff; padding: 15px; border-radius: 12px; font-size: 15px; line-height: 1.9; overflow-y: auto; border: 1px solid #e3f2fd; white-space: pre-wrap; }
+        .clickable-word { cursor: pointer; border-radius: 3px; transition: background 0.15s; }
+        .clickable-word:hover { background: rgba(33,150,243,0.08); }
+        .active-word   { background: rgba(21,101,192,0.14) !important; color: #0D47A1 !important; font-weight: 700; text-decoration: underline; text-decoration-color: #1E88E5; text-underline-offset: 3px; }
+        .active-phrase { background: rgba(230,81,0,0.11) !important;  color: #BF360C !important; font-weight: 700; text-decoration: underline; text-decoration-color: #F57C00; text-underline-offset: 3px; }
+        #result-text { flex: 1; width: 100%; resize: none; border: 1px solid #eee; border-radius: 12px; padding: 15px; font-size: 14px; line-height: 1.6; outline: none; background: rgba(255,255,255,0.65); box-sizing: border-box; }
+        #result-text:focus { background: #fff; border-color: #38F9D7; }
+        button#generateBtn { background: var(--primary-gradient); color: white; border: none; padding: 15px; font-size: 16px; border-radius: 15px; cursor: pointer; font-weight: 700; margin-top: 10px; box-shadow: 0 4px 15px rgba(79,172,254,0.3); transition: transform 0.2s; width: 100%; }
+        button#generateBtn:hover { transform: translateY(-2px); }
+        .btn-secondary { background: var(--success-gradient); margin-top: 10px; height: 50px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; width: 100%; }
+        @media (max-width: 1100px) { .main-wrapper { flex-direction: column; } .right-panel { position: static; height: 600px; width: 100%; } }
+    </style>
+</head>
+<body>
+<div class="main-wrapper">
+  <div class="panel left-panel">
+    <h1>🌈 彩虹反馈工作台 V1.3</h1>
+    <div class="section grid-custom">
+      <div class="form-group">
+        <label>👤 学生姓名</label>
+        <input type="text" id="studentName" placeholder="Cindy" list="name-memory" autocomplete="off">
+        <datalist id="name-memory"></datalist>
+      </div>
+      <div class="form-group">
+        <label>📘 教材册别</label>
+        <select id="bookSelect"><option value="WW3">WW3</option><option value="WW4">WW4</option><option value="WW5">WW5</option></select>
+      </div>
+      <div class="form-group">
+        <label>📚 单元进度</label>
+        <div style="display:flex;gap:5px;align-items:center;">
+          U<select id="unitSelect" style="flex:1;"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select>
+          L<select id="lessonSelect" style="flex:1;"><option value="1">1</option><option value="3">3</option></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>📖 类型</label>
+        <div class="radio-group" style="padding-top:5px;">
+          <label class="radio-item"><input type="radio" name="taskType" value="朗读" id="typeRead" checked> 朗读</label>
+          <label class="radio-item"><input type="radio" name="taskType" value="背诵" id="typeRecite"> 背诵</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">⭐ 星星打分</div>
+      <div class="grid-custom" style="grid-template-columns:repeat(4,1fr);">
+        <div class="form-group"><label>🗣️ 发音</label><select id="starP"><option>🌟🌟🌟🌟🌟</option><option>🌟🌟🌟🌟✨</option><option>🌟🌟🌟🌟</option><option>🌟🌟🌟✨</option><option>🌟🌟🌟</option></select></div>
+        <div class="form-group"><label>🧩 语法</label><select id="starG"><option>🌟🌟🌟🌟🌟</option><option>🌟🌟🌟🌟✨</option><option>🌟🌟🌟🌟</option><option>🌟🌟🌟✨</option><option>🌟🌟🌟</option></select></div>
+        <div class="form-group"><label>🎵 语调</label><select id="starI"><option>🌟🌟🌟🌟🌟</option><option>🌟🌟🌟🌟✨</option><option>🌟🌟🌟🌟</option><option>🌟🌟🌟✨</option><option>🌟🌟🌟</option></select></div>
+        <div class="form-group"><label>🌊 流畅</label><select id="starF"><option>🌟🌟🌟🌟🌟</option><option>🌟🌟🌟🌟✨</option><option>🌟🌟🌟🌟</option><option>🌟🌟🌟✨</option><option>🌟🌟🌟</option></select></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">📊 完成情况（决定基调，必选）</div>
+      <div class="radio-group">
+        <label class="radio-item"><input type="radio" name="level" value="1.完美作业"> 🌟 完美作业（无错误）</label>
+        <label class="radio-item"><input type="radio" name="level" value="2.错误适中"> ✨ 错误适中（小瑕疵）</label>
+        <label class="radio-item"><input type="radio" name="level" value="3.攻坚挑战"> 💪 攻坚挑战（错误较多）</label>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">🎯 详细反馈点（选填）</div>
+      <div class="form-group">
+        <label>👍 亮点夸奖：</label>
+        <div class="checkbox-group">
+          <label class="checkbox-item"><input type="checkbox" name="praise" value="语音语调生动"> 语音语调生动</label>
+          <label class="checkbox-item"><input type="checkbox" name="praise" value="节奏稳定"> 节奏稳定</label>
+          <label class="checkbox-item"><input type="checkbox" name="praise" value="表达流利"> 流利</label>
+          <label class="checkbox-item"><input type="checkbox" name="praise" value="单词发音准确度高"> 发音准确度高</label>
+          <label class="checkbox-item"><input type="checkbox" name="praise" value="语法掌握很好"> 语法掌握好</label>
+          <label class="checkbox-item"><input type="checkbox" name="praise" value="学习状态认真投入"> 状态认真投入</label>
+          <label class="checkbox-item"><input type="checkbox" name="praise" value="整体有明显进步"> 有进步</label>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:12px;">
+        <label>💡 建议指导：</label>
+        <div class="checkbox-group">
+          <label class="checkbox-item"><input type="checkbox" name="advice" value="存在发音不稳的情况，需要巩固发音，建议多听音频跟读"> 发音需巩固</label>
+          <label class="checkbox-item"><input type="checkbox" name="advice" value="出现了一些语法错误，以后要多关注语法结构"> 语法结构要关注</label>
+          <label class="checkbox-item"><input type="checkbox" name="advice" value="时态使用有误，提醒孩子平时多关注时态的准确性"> 关注时态</label>
+          <label class="checkbox-item"><input type="checkbox" name="advice" value="当前流利度不够，期待后续表达能更加流利"> 期待更加流利</label>
+          <label class="checkbox-item"><input type="checkbox" name="advice" value="语调比较平淡，建议多模仿原文的音频语调"> 模仿音频语调</label>
+          <label class="checkbox-item"><input type="checkbox" name="advice" value="在朗读或背诵时出现了跳行或漏词的现象，提醒孩子细心一点，防跳行漏词"> 防跳行漏词</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- 错误标注区 -->
+    <div class="section">
+      <div class="section-title">
+        📝 错误标注
+        <span style="font-size:11px;color:#aaa;font-weight:400;">单击 = 单词，划选 = 短语/句子，自动分类，再次单击已标注内容可撤销</span>
+      </div>
+      <div class="error-section">
+        <div class="error-section-header">
+          <span class="badge badge-word">单词</span>
+          发音问题
+          <span style="font-size:11px;color:#aaa;font-weight:400;">原因选填——填了说明原因，不填只说「注意发音」</span>
+        </div>
+        <div id="wordErrors"></div>
+        <div class="error-empty" id="wordEmpty">暂无——单击右侧课文中的单词即可添加</div>
+      </div>
+      <div class="error-section">
+        <div class="error-section-header">
+          <span class="badge badge-phrase">短语 / 句子</span>
+          漏读 / 语法 / 其他
+          <span style="font-size:11px;color:#aaa;font-weight:400;">原因必填——不填无法提交</span>
+        </div>
+        <div id="phraseErrors"></div>
+        <div class="error-empty" id="phraseEmpty">暂无——在右侧课文中划选多个词即可添加</div>
+      </div>
+    </div>
+
+    <div class="section" style="border:none;padding-bottom:0;">
+      <div class="form-group">
+        <label>✨ 个性化观察点（选填）</label>
+        <input type="text" id="teacherPrompt" placeholder="例如：发音很有情感 / 今天指读很认真...">
+      </div>
+    </div>
+
+    <!-- 我的风格设置 -->
+    <div style="margin-top:12px;">
+      <button onclick="toggleStyle()" id="styleToggleBtn"
+        style="width:100%;background:rgba(255,255,255,0.5);border:1px dashed rgba(0,0,0,0.15);border-radius:12px;padding:10px 14px;cursor:pointer;font-size:13px;color:#546E7A;text-align:left;display:flex;align-items:center;gap:6px;">
+        <span id="styleArrow">▶</span>
+        🎨 我的风格设置（展开后让AI更像你的语气）
+      </button>
+      <div id="stylePanel" style="display:none;margin-top:8px;background:rgba(255,255,255,0.6);border-radius:14px;padding:14px;border:1px solid rgba(0,0,0,0.06);">
+        <div style="font-size:12px;color:#888;margin-bottom:10px;line-height:1.6;">
+          粘贴3-5条你觉得写得最好的历史反馈，AI会学习你的语气和用词习惯。<br>
+          建议选不同类型学生的反馈各一条效果更好。内容自动保存在本机浏览器。
+        </div>
+        <textarea id="styleInput"
+          placeholder="把你之前写的反馈粘贴在这里，例如：&#10;&#10;Lily这次的朗读让老师眼前一亮！节奏把握得非常好...&#10;&#10;Max今天挑战了不少难点，老师看到你的努力了！..."
+          style="height:140px;font-size:13px;line-height:1.6;resize:vertical;"
+          oninput="saveStyleInput()"></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+          <span style="font-size:11px;color:#aaa;">已自动保存到本机浏览器</span>
+          <button onclick="clearStyleInput()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:12px;padding:4px 8px;">清空风格</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:18px;">
+      <button id="generateBtn" onclick="generateRainbow()" style="flex:3;margin-top:0;">✨ 一键生成专属反馈</button>
+      <button onclick="clearStudentData()" id="clearBtn" style="flex:1;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:15px;font-size:15px;border-radius:15px;cursor:pointer;font-weight:700;">🗑️ 下一个</button>
+    </div>
+  </div>
+
+  <div class="panel right-panel">
+    <div class="tab-header">
+      <button class="tab-btn active" id="tabBtnText" onclick="switchTab('textbook')">📖 课文原文</button>
+      <button class="tab-btn" id="tabBtnResult" onclick="switchTab('result')">📋 生成结果</button>
+    </div>
+    <div id="tabTextbook" class="tab-content active">
+      <div id="textbook-viewer" class="textbook-content">正在载入课文...</div>
+    </div>
+    <div id="tabResult" class="tab-content">
+      <textarea id="result-text" placeholder="点击【一键生成】后，反馈结果会出现在这里..."></textarea>
+      <button class="btn-secondary" id="copyBtn" onclick="copyText()">📋 一键复制发送微信</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TONE_EXAMPLES = {
+    "朗读": {
+        "1.完美作业": ["老师非常欣慰看到这么优秀的一份朗读打卡！整个发音很细腻、准确，足见我们的发音基础很好。语句表达准确，你的节奏不紧不慢的，听得出咱们也是享受朗读的过程的。老师也特别喜欢你的语调，抑扬顿挫感非常好，很地道哦。","老师从你的声音里听到了满满的用心，准确度、流畅度、语调都是不错的。老师通过你的语气语调，就完全感受出了文中的情感，非常棒！"],
+        "2.错误适中": ["老师听得出你今天状态很认真，整体表现是不错的！有几个小地方我们可以继续打磨，相信下次会更好。"],
+        "3.攻坚挑战": ["老师听得出来你今天是鼓起勇气来挑战的，光是这份勇气就很值得肯定！建议先跟着音频把有问题的地方单独多听几遍，再慢慢跟读，不用急着一口气读完，稳扎稳打才是进步最快的方式。加油，老师在看着你进步！"]
+    },
+    "背诵": {
+        "1.完美作业": ["咱们背诵时一直在认真思考、回忆课文内容，眼神非常专注坚定哦。你对于大多数语句掌握得是不错的，整体完成度非常高！"],
+        "2.错误适中": ["这次背诵整体完成得不错，有几处小细节需要注意一下，继续加油就能更完美！"],
+        "3.攻坚挑战": ["老师看到你今天认真完成了背诵挑战，这本身就很不容易！背诵最难的地方就是又要记内容、又要注意准确度。建议把课文再多听几遍，边听边在脑子里跟着默背，熟练了之后再开口，会顺很多。继续加油，进步一定会看得见的！"]
+    }
+};
+
+const errorItems = { word: [], phrase: [] };
+
+function autoClassify(text) { return text.trim().includes(' ') ? 'phrase' : 'word'; }
+
+function addError(text, groupId, spans) {
+    const type = autoClassify(text);
+    const cls  = type === 'word' ? 'active-word' : 'active-phrase';
+    spans.forEach(s => { s.classList.add(cls); s.dataset.groupId = groupId; s.dataset.groupType = type; });
+    errorItems[type].push({ text, reason: '', groupId });
+    renderErrors(type);
+}
+
+function removeError(type, groupId) {
+    document.querySelectorAll(`[data-group-id="${groupId}"]`).forEach(s => {
+        s.classList.remove('active-word','active-phrase');
+        delete s.dataset.groupId; delete s.dataset.groupType;
+    });
+    errorItems[type] = errorItems[type].filter(e => e.groupId !== groupId);
+    renderErrors(type);
+}
+
+function updateReason(type, groupId, val) {
+    const item = errorItems[type].find(e => e.groupId === groupId);
+    if (item) item.reason = val;
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderErrors(type) {
+    const container = document.getElementById(type + 'Errors');
+    const emptyEl   = document.getElementById(type + 'Empty');
+    const items     = errorItems[type];
+    if (!items.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; return; }
+    emptyEl.style.display = 'none';
+    const isRequired = type === 'phrase';
+    const ph = type === 'word' ? '选填：具体原因（如 i 读成了 e）' : '必填：错误原因（如 漏读 not / 时态错误）';
+    container.innerHTML = items.map(item => `
+        <div class="error-item">
+            <div class="content-tag">${escHtml(item.text)}</div>
+            <input class="reason-input${isRequired ? ' required-field' : ''}"
+                placeholder="${ph}" value="${escHtml(item.reason)}"
+                oninput="updateReason('${type}','${item.groupId}',this.value)">
+            <button class="remove-btn" onclick="removeError('${type}','${item.groupId}')">✕</button>
+        </div>`).join('');
+}
+
+function wrapWords(text) {
+    return text.replace(/([a-zA-Z''\-]+|[^\w\s]|\s+)/g, m => {
+        if (/^\s+$/.test(m)) return m;
+        if (/[a-zA-Z]/.test(m)) return `<span class="clickable-word">${m}</span>`;
+        return m;
+    });
+}
+
+function updateTextbookView() {
+    const book = document.getElementById('bookSelect').value;
+    const unit = document.getElementById('unitSelect').value;
+    const lesson = document.getElementById('lessonSelect').value;
+    const key = `${book}_U${unit}L${lesson}`;
+    if (lesson === '1') document.getElementById('typeRead').checked = true;
+    else document.getElementById('typeRecite').checked = true;
+    const div = document.getElementById('textbook-viewer');
+    div.innerHTML = textbookData[key] ? wrapWords(textbookData[key]) : `🚧 【${key}】课文暂未录入，请参考纸质书~`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadSavedNames();
+    loadStyleInput();
+    updateTextbookView();
+    ['bookSelect','unitSelect','lessonSelect'].forEach(id =>
+        document.getElementById(id).addEventListener('change', updateTextbookView));
+
+    const viewer = document.getElementById('textbook-viewer');
+    let mouseDownInViewer = false;
+
+    viewer.addEventListener('mousedown', () => { mouseDownInViewer = true; });
+
+    document.addEventListener('mouseup', (e) => {
+        if (!mouseDownInViewer) return;
+        mouseDownInViewer = false;
+        const sel  = window.getSelection();
+        const text = sel ? sel.toString().trim() : '';
+        if (text && text.includes(' ')) {
+            const range = sel.getRangeAt(0);
+            const spans = [];
+            viewer.querySelectorAll('.clickable-word').forEach(s => {
+                if (range.intersectsNode(s) && !s.dataset.groupId) spans.push(s);
+            });
+            sel.removeAllRanges();
+            if (spans.length > 1) addError(text, 'g_' + Date.now(), spans);
+        } else {
+            sel && sel.removeAllRanges();
+        }
+    });
+
+    viewer.addEventListener('click', (e) => {
+        const t = e.target;
+        if (!t.classList.contains('clickable-word')) return;
+        const sel = window.getSelection();
+        if (sel && sel.toString().trim().includes(' ')) return;
+        if (t.dataset.groupId) { removeError(t.dataset.groupType, t.dataset.groupId); }
+        else { addError(t.innerText.trim(), 'g_' + Date.now(), [t]); }
+    });
+});
+
+function buildErrorPrompt() {
+    const lines = [];
+    if (errorItems.word.length) {
+        lines.push('【单词发音问题】');
+        errorItems.word.forEach(i => lines.push(i.reason.trim()
+            ? `- 【${i.text}】：${i.reason.trim()}`
+            : `- 【${i.text}】（只说"注意发音"，不要猜原因）`));
+    }
+    if (errorItems.phrase.length) {
+        lines.push('【短语/句子问题】');
+        errorItems.phrase.forEach(i => lines.push(`- 【${i.text}】→ 错误原因：${i.reason.trim()}`));
+    }
+    return lines.length ? lines.join('\n') : '无';
+}
+
+async function generateRainbow() {
+    const btn  = document.getElementById('generateBtn');
+    const name = document.getElementById('studentName').value.trim();
+    if (!name) { alert('⚠️ 请填写学生姓名！'); return; }
+    const levelEl = document.querySelector('input[name="level"]:checked');
+    if (!levelEl) { alert('⚠️ 请选择完成情况！'); return; }
+    let ok = true;
+    errorItems.phrase.forEach(i => { if (!i.reason.trim()) ok = false; });
+    if (!ok) {
+        renderErrors('phrase');
+        setTimeout(() => { document.querySelectorAll('.required-field').forEach(el => { if (!el.value.trim()) el.classList.add('required-empty'); }); }, 0);
+        alert('⚠️ 短语/句子的错误原因为必填项，请填写后再生成！');
+        return;
+    }
+    const taskType = document.querySelector('input[name="taskType"]:checked').value;
+    const level    = levelEl.value;
+    const unit     = document.getElementById('unitSelect').value;
+    const lesson   = document.getElementById('lessonSelect').value;
+    const toneExamples = (TONE_EXAMPLES[taskType]?.[level] || []).join('\n---\n');
+    saveName(name);
+    const starP = document.getElementById('starP').value;
+    const starG = document.getElementById('starG').value;
+    const starI = document.getElementById('starI').value;
+    const starF = document.getElementById('starF').value;
+    const header = `家长您好，以下是${name}【U${unit}L${lesson}】的${taskType}打卡反馈，请查收：\n\n单词发音    ${starP}\n语法结构    ${starG}\n语气语调    ${starI}\n流畅程度    ${starF}`;
+    btn.innerText = '✨ 正在生成，请稍候...'; btn.disabled = true;
+    try {
+        const resp = await fetch('/api/chat_test', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({
+            name, progress: `U${unit}L${lesson}`, taskType, level,
+            praises:  Array.from(document.querySelectorAll('input[name="praise"]:checked')).map(el=>el.value).join('，'),
+            advices:  Array.from(document.querySelectorAll('input[name="advice"]:checked')).map(el=>el.value).join('，'),
+            errorPrompt: buildErrorPrompt(), toneExamples,
+            styleExamples: localStorage.getItem('houhai_teacherStyle') || '',
+            personal: document.getElementById('teacherPrompt').value,
+        })});
+        if (!resp.ok) throw new Error(`服务器报错: ${resp.status}`);
+        const data = await resp.json();
+        document.getElementById('result-text').value = header + '\n\n' + data.result;
+        switchTab('result');
+    } catch(err) { alert('❌ 生成失败：' + err.message); }
+    finally { btn.innerText = '✨ 一键生成专属反馈'; btn.disabled = false; }
+}
+
+function switchTab(t) {
+    document.querySelectorAll('.tab-btn,.tab-content').forEach(el=>el.classList.remove('active'));
+    if (t==='textbook') { document.getElementById('tabBtnText').classList.add('active'); document.getElementById('tabTextbook').classList.add('active'); }
+    else { document.getElementById('tabBtnResult').classList.add('active'); document.getElementById('tabResult').classList.add('active'); }
+}
+function copyText() {
+    const box = document.getElementById('result-text');
+    if (!box.value) { alert('⚠️ 请先生成结果！'); return; }
+    box.select(); document.execCommand('copy');
+    const btn = document.getElementById('copyBtn');
+    btn.innerText = '✅ 复制成功！快去微信粘贴吧';
+    setTimeout(()=>{btn.innerText='📋 一键复制发送微信';},2000);
+}
+function clearStudentData() {
+    ['studentName','teacherPrompt'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('result-text').value='';
+    ['starP','starG','starI','starF'].forEach(id=>document.getElementById(id).selectedIndex=0);
+    document.querySelectorAll('input[name="level"],input[name="praise"],input[name="advice"]').forEach(el=>el.checked=false);
+    ['word','phrase'].forEach(type=>{errorItems[type]=[];renderErrors(type);});
+    document.querySelectorAll('.active-word,.active-phrase').forEach(s=>{
+        s.classList.remove('active-word','active-phrase'); delete s.dataset.groupId; delete s.dataset.groupType;
+    });
+    switchTab('textbook');
+    document.getElementById('textbook-viewer').scrollTop = 0;
+    const btn=document.getElementById('clearBtn'); btn.innerText='✅ 已清空';
+    setTimeout(()=>{btn.innerText='🗑️ 下一个';},1000);
+}
+function toggleStyle() {
+    const panel = document.getElementById('stylePanel');
+    const arrow = document.getElementById('styleArrow');
+    const isOpen = panel.style.display !== 'none';
+    panel.style.display = isOpen ? 'none' : 'block';
+    arrow.textContent = isOpen ? '▶' : '▼';
+}
+function saveStyleInput() {
+    localStorage.setItem('houhai_teacherStyle', document.getElementById('styleInput').value);
+}
+function clearStyleInput() {
+    document.getElementById('styleInput').value = '';
+    localStorage.removeItem('houhai_teacherStyle');
+}
+function loadStyleInput() {
+    const saved = localStorage.getItem('houhai_teacherStyle') || '';
+    const el = document.getElementById('styleInput');
+    if (el) el.value = saved;
+}
+
+function loadSavedNames() {
+    const saved = JSON.parse(localStorage.getItem('houhai_studentNames')||'[]');
+    const dl = document.getElementById('name-memory'); dl.innerHTML='';
+    saved.forEach(n=>{const o=document.createElement('option');o.value=n;dl.appendChild(o);});
+}
+function saveName(name) {
+    if(!name) return;
+    const saved=JSON.parse(localStorage.getItem('houhai_studentNames')||'[]');
+    if(!saved.includes(name)){saved.push(name);localStorage.setItem('houhai_studentNames',JSON.stringify(saved));loadSavedNames();}
+}
+
+// 课文数据（把原完整版 textbookData 粘贴在这里替换）
+const textbookData = {
+        "WW3_U1L1": `Carla and Lorena are nine years old. They’re twins. They’re Brazilian. They’re from São Paulo. They’re the same in lots of ways. But they’re different in lots of ways, too. 
+
+Carla - Carla is loud. She’s got lots of friends. She’s always talking. She is silly, too! 
+
+Both - Carla and Lorena are both clever. And they’re crazy about technology. They’re always building and making new things.  
+
+Lorena - Lorena is quiet. She’s got two good friends. But she’s often with her sister, Carla. 
+
+These twins are best friends!`,
+
+        "WW3_U1L3": `Hi! I'm Errol and I'm 11 years old. I'm from India. My best friends are Eshan and Yann. They're brothers and they're nine and 11 years old. They're cool!
+
+The brothers' hair is brown. Yann is together with me in Class 3A at school. Eshan is very clever, and Yann is very funny. Their birthdays are on the same day—8th February!
+
+Who is your best friend? 
+
+Write me an email soon!
+Errol
+
+Hello!
+
+I'm Lara and I'm French. I'm nine years old. 
+
+Sophie is my best friend. She's 34 years old. Her hair is fair and her eyes are green. 
+
+She's beautiful and she's my mum! Sometimes I do stupid things, but she says 'It's OK, it doesn't matter.'
+
+Is your mum your best friend?`,
+
+        "WW3_U2L1": `Dad: Sonja, I’ve got a box of my old things. Look, a puzzle! It’s got 500 pieces. Do you want to do it with me? 
+
+Sonja: Not now, Dad. I’m playing a video game.
+
+Dad: Oh, OK. Sorry.
+Sonja: No, it’s OK, Dad. What other things have you got in that box? 
+
+Dad: Well, I’ve got some old books, some photos, and … look. My typewriter!
+
+Sonja: What is that? It’s so strange! Can I touch it? 
+
+Dad: Of course. You can write with it. You put the paper in, then you touch the letters. Go on, try it!
+
+Sonja: I’m scared. I don’t want to break it.
+
+Dad: Scared? It’s fun! Look, I can write your name. Now you do it. 
+
+Sonja: Wow! It is fun. It’s different from my computer, but I like it!
+
+Dad: You can have it.
+
+Sonja: Really? Thanks Dad!`,
+
+        "WW3_U2L3": `What's your favourite thing? 
+
+Dan, 11.
+My friends are crazy about video games, but I like comics. My friends say comics are boring. I like the drawings and the stories. I love Japanese comics. They're called manga. They're my favourite!
+
+Amy, 14.
+My favourite thing is my violin. It's my mum's violin really and it's very old! Mum doesn't play it now. I have lessons and I'm quite good. The lessons are difficult, but they're fun.
+
+Tom, 12.
+My family and I have got a boat. Its name is 'Sea Queen' and it's blue and white. It isn't very big but it's great! It's my favourite thing. Here's a photo of me, my mum, my dad and my sister with our boat.
+
+Miranda, 7.
+My puppets are my favourite things. I have fun with them. My little brother Tony is crazy about puppets, too. We play with the puppets together. Our puppets sing and dance for our mum and dad.`,
+
+        "WW3_U3L1": `Maggie MacDonnell is a teacher. In March 2017, she was in Dubai at the Global Teacher Prize Ceremony. Guess what? She won! 
+
+Dubai is very far away from Salluit, in the Canadian Arctic, where Maggie teaches. You cannot get to Salluit by car. You have to fly. It is very cold and windy there. 
+
+Many people leave Salluit, but not Maggie. Maggie’s students study maths, science and English. She teaches school subjects, but she does a lot more. She finds solutions to her students' problems. It‛s often too cold for them to play outside. So, Maggie opened a fitness centre. Now, her students can exercise and practise sport all year.`,
+
+        "WW3_U3L3": `I want to tell you about a secondary boarding school in Argentina. It is very different from my school. Students study maths, science and Spanish, but they also do some very cool stuff! They learn how to grow vegetables and how to take care of animals, like sheep!  
+
+In the afternoon, they always have after-school activities. They learn how to make jewellery and do arts and crafts. In the evening, they have dinner and they often study and do homework. But they go to sleep at 11.00. I usually go to sleep at 9.30, but sometimes I talk with my sister until 10.30.  
+
+Schedule
+7.00 Students wake up, make their beds and shower  
+7.30 Students eat breakfast  
+8.00 School starts / Students study subjects like maths, science and Spanish 
+12.30 Students eat lunch and rest   
+1.30 Afternoon classes / Students learn how to grow vegetables and take care of animals 
+4.20 Break
+5.20 School day ends / after-school activities — jewellery making and arts and crafts 
+8.00 Students eat dinner
+9.00 Students study or do homework
+11.00 Students go to sleep`,
+
+        "WW3_U4L1": `Wyatt: Hi Eve. What’s that in your hand?
+Eve: It’s my kite. It’s a colourful bird. 
+Wyatt: Where are you going with the kite? 
+Eve: To the Kite Festival. Do you want to come with me? 
+Wyatt: All right!   
+
+[At the festival]
+Eve: I can’t wait to get my kite into the sky.  
+Wyatt: There are so many people here! Is this a competition? 
+Eve: Yes, it is. There’s a prize for the prettiest kite. 
+Wyatt: What does the winner get? 
+Eve: Usually, the winner gets some money. 
+Wyatt: You’ve got a pretty kite, Eve. You might win! 
+
+[Later]
+Announcer: And the winner is … Eve Duclot! 
+Wyatt: That’s you, Eve. Congratulations! 
+Eve: Wow! I’m really surprised. And I’m happy, too.`,
+
+        "WW3_U4L3": `What do YOU do on Saturdays? 
+
+Guestavo: Hi, I’m Gustavo. Where are you from? 
+
+Chet: Hi! I’m from Thailand, but I’m in Brazil for a week. My name’s Chet.
+
+Guestavo: Nice to meet you, Chet. 
+
+Chet: Nice to meet you, too. What do you usually do here on Saturdays? 
+
+Guestavo: I often go swimming and then I eat a big meal with my family. And you? 
+
+Chet: Well, my dad’s got a bookshop. On Saturday mornings I help in the shop. 
+
+Guestavo: Wow! That’s fantastic! What do you do on Saturday evenings? 
+
+Chet: I sometimes go to the sports centre with my friends and we go bowling. We also have bowling contests. I’m usually the winner. I’m very good at bowling. Do you like bowling? 
+
+Guestavo: No, I don’t. I often go to the cinema with my parents on Saturday. In my city, Rio de Janeiro, you can see films at cinemas outside! 
+
+Chet: Really? We haven’t got that in my town. Do you like amusement parks? 
+
+Guestavo: Yes, I do. There’s a great park near my house. It’s called Parque Shanghai. 
+
+Chet: There’s a fun amusement park near my house, too. It’s called Dream World. It’s got fantastic rides. There are some really fast roller coasters. I love to go there at the weekend. There are lots of great water parks in Thailand, too! 
+
+Guestavo: Wow! Thailand sounds pretty cool! 
+
+Chet: Yes, it is. Maybe you can come and visit one day!`,
+
+        "WW3_U5L1": `The Holi Festival takes place every year in South Asia. It’s especially popular in India. The celebration is at the end of winter. It’s on the last full moon of the month, in late February or early March.  
+
+Before the festival, people go to market stalls to buy colourful powder and paint. The first evening, there are bonfires to start the celebration. The next day, people go into the streets with the powder and paint. They throw the colours onto other people and into the air. 
+
+People are covered in pink, yellow, red, orange and other bright colours! They sing, dance and play. Everybody is happy! The Holi Festival is an exciting, colourful way to start spring.`,
+
+        "WW3_U5L3": `New Year’s Eve is on 31st December. People everywhere celebrate in different ways. Some people have a party with friends or family. They stay at home, have some food and watch TV. Other people like going out to celebrate in the streets with music and fireworks.  
+
+Countries around the world have some unusual New Year’s Eve traditions. Here’s what happens at midnight in different parts of the world:  
+
+Ireland
+People throw bread at the walls before midnight.  
+
+Spain
+People eat 12 grapes – one for each month of the year.  
+
+Japan
+People let balloons go into the air. These balloons have got people’s wishes for the New Year.  
+
+Ecuador
+People walk around the block with an empty suitcase. They think about the holidays they will take in the New Year. 
+
+South Africa
+People throw sofas, chairs and other things out of the window.  
+
+Romania
+People put on bear costumes and dance.  
+
+Switzerland
+People drop a scoop of ice cream on the floor.`,
+
+        "WW3_U6L1": `Nina: Ky, look at this photo! It's of a dinner my parents went to called 'Dinner in the Sky.'
+
+Ky: Cool! The restaurant is so high above the ground!
+
+Nina: Yes! They bring the table up above the trees. They serve food at 50 metres high.
+
+Ky: Wow! Do you order from a menu?
+
+Nina: No, a chef chooses the food and cooks it in front of the guests. Then a waiter or waitress brings food to each person.
+
+Ky: That looks really fun, but a bit scary!
+
+Nina: Yes, my mum was scared, but she had fun, too.
+
+Ky: How much food do they give you?
+
+Nina: A lot! The dessert was my mum's favourite—chocolate cake.
+
+Ky: Sounds good. Your mum was probably happy to get the bill and go home!
+
+Nina: Yes, she was. And she was happy that no glasses or plates fell off the table.
+
+Ky: Do you want to have dinner in the sky?
+
+Nina: No, I like being on the ground at my favourite fast food restaurant, with a burger in my hand!`,
+
+        "WW3_U6L3": `Food Around the World.
+Poland is famous for its pierogi. Pierogi are a national dish of Poland since the 1200s. They’re filled with many different things, such as cheese and potatoes or meat. They’re delicious fried with butter and onion. Pierogi can even have sweet fillings, like blueberries. 
+
+In Indonesia, satay is very popular. Satay is meat, such as chicken or rabbit, on a stick. It’s cooked over a fire. People like to eat satay with sweet or spicy sauces. You can buy it on the street in many parts of Indonesia. It’s very tasty. Noodle and rice dishes are also popular in Indonesia.
+
+On the coast of Latin America, in countries such as Peru, people eat a lot of fish. Ceviche is a famous dish made from fish with lemon or lime juice and spices. The fish is very fresh. It’s very healthy food and it is delicious. People usually eat vegetable dishes at the same time, such as salad, sweetcorn, sweet potatoes, nuts or onions. Ceviche is now popular around the world.
+
+In Ethiopia, people eat a lot of meat and vegetables in spicy sauces. Food is served on a large plate for friends and family to share. People use a special bread, called injera, as a spoon to eat these delicious dishes. They scoop up meat and vegetables and eat them with the bread.
+
+
+WW3B`,
+
+        "WW3_U7L1": `Ahmed: Hey, Nur. What are you doing? 
+
+Nur:  I’m reading about this year’s Our Town Bike Race.  
+
+Ahmed: Let’s enter the race together. What do you think?  
+
+Nur: I’m not sure. It’s too difficult!  
+
+Ahmed: You can do it. You’re great on your bike.  
+
+Nur: I don’t know. A lot of the racers are very fast. They jump, too! I can’t jump well. 
+
+Ahmed: Let’s practise the jumps then. We can practise after school. 
+
+Nur: OK, yes. I don’t want to fall during the race. Hmm … maybe I need a better helmet, too.  
+
+Ahmed: Nur, if you’re scared, don’t enter.  
+
+Nur: Scared? Me? No way! I’m not scared! I’ll enter. 
+
+Ahmed: Are you sure? 
+
+Nur: Yes, I’m sure. And who knows? Maybe I’ll be the first person to cross the finish line!  
+
+Ahmed: Well, we may not be the winners, but we can still have fun!`,
+
+        "WW3_U7L3": `Ice dancers 
+
+Paolo and Laura are Portugal's junior ice-dancing champions. What are they training for at the moment?
+
+Reporter: How old are you?
+
+Laura: I'm sixteen and Paulo is seventeen.  
+
+Reporter: Tell me about your day.
+
+Laura: We get up at six o'clock every morning and we practise for an hour before school.
+
+Paulo: Then after school we practise again for two hours!
+
+Reporter: It's hard work, then!
+
+Laura: Yes, but we love it. We want to be Olympic champions!
+
+Reporter: Are you training at the moment?
+
+Paulo: Yes, we are. We're training for a big competition in Lisbon next week.
+
+Laura: Our coach is teaching us new things for the competition. They're very difficult.
+
+Reporter: Are you excited about the competition?
+
+Paulo: Yes! Young ice-dancers from many countries are coming. It's very exciting.
+
+Reporter: What music are you skating to?
+
+Laura: It's from the film The Lion King.
+
+Reporter: Well, good luck!
+
+Paulo and Laura: Thanks!`,
+
+        "WW3_U8L1": `Where do you live? In a house or a cottage? Or in a flat in the city? In Japan, some people live inside footballs. 
+
+OK, they’re not real footballs! They’re football-shaped houses. They are very strong. They keep people safe in an earthquake or a flood. Some people keep these houses in their gardens as a second home. Other people live in them all the time.  
+
+These houses can be very small—the smallest are for pets to live in. There are also bigger houses with three floors. In these, homes, the bedrooms are above the living room. You climb a ladder to get into bed. The football houses haven’t got basements because they don’t sit on the ground. They haven’t got balconies, either! 
+
+Each house has got 32 parts, just like a football. Some of them are windows, and some windows open to the sky. When you’re lying in bed at night, you’ve got great views of the stars. 
+
+Would you like to live in a football-shaped house? Why or why not?`,
+
+        "WW3_U8L3": `Visit Barcelona! 
+
+Barcelona is the second largest city in Spain, the capital of the region of Catalonia. It’s a lively city with lots to see and do. Here are some fantastic places you must see in Barcelona! 
+
+Take a walk on La Rambla, a large street in Barcelona’s city centre. You can go shopping or have a snack in a café. There are also people playing music, dancing and acting in the streets. It’s a great place to have fun!  
+
+The Sagrada Familia is the largest church in Barcelona. Workers started building it 130 years ago, and it’s still not finished! Every year, 2.8 million people visit the Sagrada Familia. It’s the most popular tourist attraction in Spain. 
+
+Visit Parc de la Ciutadella one afternoon. It’s a good place to walk or ride a bike. There are many trees and a big lake. You can take a boat ride on the lake. There are several museums and a zoo in the park. There’s a castle, too. It’s called The Castle of the Three Dragons. Next to the castle is the Hivernacle, a large indoor garden.  
+
+Are you ready to relax outside the city? Then go to Barceloneta Beach and spend the day by the sea. It’s just ten minutes from the city centre. You can go by train or taxi.`,
+
+        "WW3_U9L1": `Are you looking to take a holiday in an unusual place? These villages are popular with tourists and are anything but ordinary.  
+
+Júzcar, Spain 
+This village was white until 2011. Now, Júzcar is blue. The film company Sony® painted the buildings blue to celebrate the film The Smurfs, about small, blue characters. Even the church and the town hall are blue! When Sony came to clean the blue from the buildings, the people said, ‘No’. They wanted to keep their town blue.     
+
+Shani Shingnapur, India 
+The village of Shani Shingnapur is like any other village, with one big difference: there are no doors here. Villagers feel safe, so they don’t put doors on houses or shops. The bank does have a door, but there are no locks.  And there’s very little crime in the village.  
+
+Giethoorn, Netherlands 
+This small village of under 3,000 people is another example of a village that hasn’t got something most villages have: roads. This village has got only canals, pavements and bridges. Cars must stay out of the village. People walk or use boats instead.`,
+
+        "WW3_U9L3": `Elsa, 10 (Mexico)
+We had a great holiday in Mexico last summer. We travelled by car from our home in Texas and we took our bikes with us! Every day we went swimming and cycling. We visited some very interesting museums and very old temples. 
+
+We ate at some fantastic restaurants. Mexican food is delicious. At night we slept in tents. We had two tents—one for my mum and dad and one for my sister and me. My sister told me stories every night. Sometimes I was very scared!
+
+Beto, 12 (New York)
+I went on holiday to New York with my family last year. We went by plane and we stayed in a hotel in the city centre. The shops in New York are great, but some were very expensive! I bought three pairs of jeans! They were cheap. I ate lots of delicious American food. I really loved the burgers! One evening we saw a play at a theatre on Broadway. It was exciting because there was a famous actor in it!`,
+
+        "WW3_U10L1": `Cinecittà is a film studio near Rome, Italy. It’s the largest film studio in Europe. At Cinecittà, people make films, TV shows and adverts. The studio is very big − it’s got 22 stages, 21 make-up rooms and more than 300 dressing rooms! 
+
+The studio opened in 1937. The famous Italian film director, Federico Fellini, made many films at Cinecittà. Many famous American films came from this studio, too.
+
+In 2011, Cinecittà opened for tours. Today, you can visit the studios and walk around the sets. Some sets are there all the time, like the set of Ancient Rome. You can see costumes and watch films that were made there. You can also learn about the history of the studio and the films. You may even see a famous actor or director during your visit. If you do, be sure to get an autograph!`,
+
+        "WW3_U10L3": `An Interview With the Drama School’s Most Famous Student
+
+Interviewer: I’m here with famous singer and actor, Dina Cho. Dina went to drama school several years ago. Today, we’ll talk about her time there. First, why did you want to go to a school for drama, Dina? 
+
+Dina: Well, I always wanted to become a star. At the school, we had lessons in maths, science and geography, but we also had singing and acting lessons. We often stayed after school to practise. 
+
+Interviewer: When did you start lessons at the school? 
+
+Dina: I started when I was eleven. I was a student there for six years.  
+
+Interviewer: Wow! Did you have an audition?
+
+Dina: Yes, I did. It was difficult. The school only takes three students a year.   
+
+Interviewer: What did you do at the audition? And were you nervous?
+
+Dina: I sang several songs from my favourite musicals.  And yes, I was nervous. Now, I don’t get as nervous. I try to relax, but sometimes I'm still a bit scared to go on stage.
+
+Interviewer: Did you enjoy life at drama school? 
+
+Dina: Yes, I did. It was hard work, but I’m very lucky. The teachers helped me get better. I learned how to audition and talk to directors. Now, I’ve got roles in several films. It’s really exciting!`,
+
+        "WW3_U11L1": `My name is Juliana, and I love travelling. Last summer, I went on holiday to Costa Rica. It was fantastic! I love animals, and the animals in Costa Rica are cooler than any I’ve seen. 
+
+First, we spent two days in the Barra Honda National Park. This park is famous for its large caves. We wanted to see the bats that live there. There are thousands of them! We saw them in the day, when they were sleeping. We brought torches to help us see them better because it’s dark in the caves. At night, the bats fly out of the caves and eat insects—lots of insects. Did you know that some bats can eat 1,000 insects in a single hour? That’s amazing!  
+
+After leaving Barra Honda, we travelled south to Corcovado National Park, which is a bigger park. Corcovado has got many different species of animals: 220 different types of butterflies, 400 different types of birds and 6,000 different types of insects! There are snakes, monkeys, lizards, turtles and even sharks swimming along the beach. I loved seeing the beautiful macaws flying in the park. I used my binoculars to see them better. But my favourite was the cotamundi. It’s so cute. It looks like a teddy bear, and it loves bananas!`,
+
+        "WW3_U11L3": `Mirna, 10, Peru
+Our parrot, Arturo, is the cleverest bird in the world! He can talk and he can also count to five now. My mum taught him, and it was hard work. My parrot can say lots of words, but his favourite words are 'What's for dinner?' He's always very hungry!
+
+Alvin, 12, Canada
+Our dog, Mattie, is the best pet in the world. He can do clever tricks, but sometimes he's very naughty! One day he chased another dog in the park and we lost him. We looked everywhere for him, but we didn't find him. We were very sad and we went home. Who was at the front door? Our dog, Mattie!
+
+Helen, 9, Greece
+My cat, Nelly, is nicer and cleverer than a dog! My parents and I went to the shelter to get her. We all love her very much. Nelly's favourite person in our family is Mum because she feeds Nelly every day. Nelly can understand her name. She comes immediately when she's called!`,
+
+        "WW3_U12L1": `Jannie: Hey, Kevin. My family and I are going to go for a hike at the weekend. We’re going to go geocaching. Do you want to come?
+
+Kevin: Geocaching? What’s that? 
+
+Jannie: Well, it’s like looking for treasure. You want to find a little box. There’s a smartphone app that shows you where the box is. Then, you use GPS to find it!  
+
+Kevin: Wow! Cool! Looking for treasure? That sounds great!
+
+Jannie: Well, don’t get too excited. It’s not actual treasure. It’s just a notebook and some objects in a box. If we like them, we can take one. We’re going to bring a toy to leave for the next person.  We’re also going to write our names in the notebook, to show we were there.   
+
+Kevin: Are there geocaches near us?
+
+Jannie: Yes! They’re everywhere! There are about 2 million geocaches hidden around the world. The app shows nine hidden in the forest near our house.  
+
+Kevin: OK, great! I’m going to come with you. 
+
+Jannie: Cool! We’re going to leave at 8.30. Bring your raincoat and boots. It’s going to rain in the morning, but get sunny later. Who knows? We may see a rainbow!`,
+
+        "WW3_U12L3": `Looking for TORNADOES! Brett Jarvis has an unusual hobby; he likes watching tornadoes! We asked him about tornadoes and why he likes them.
+
+Interviewer: What is a tornado?
+
+Brett: A tornado is a very fast and strong wind. It looks like a long black cloud.
+
+Interviewer: Where do you find them?
+
+Brett: There are about 750 tornadoes a year in the USA. I live in the west of the USA and there are a lot of tornadoes there. There aren't many mountains, so tornadoes can move very fast. 
+
+Interviewer: Are they dangerous?
+
+Brett: Yes! Tornadoes can lift houses and cars off the ground! They destroy everything near them.
+
+Interviewer: Why do you like getting close to tornadoes?
+
+Brett: Because it's exciting! When I see a tornado, I follow it in my car and take photographs of it. Sometimes the tornado suddenly comes towards me—that's scary! 
+
+Interviewer: What do you do then?
+
+Brett: I drive away from it—fast!
+
+Interviewer: When is the next tornado going to happen in your area?
+
+Brett: Probably very soon. It's May now, and there are usually more tornadoes in spring.
+
+Interviewer: And are you going to follow it?
+
+Brett: Yes, of course! Don't worry. I'll be careful.`,
+
+        // ---------------- WW4 (第四册) ----------------
+        "WW4_U1L1": `Emre: Kerem, are you excited about the summer?
+
+Kerem: Of course! I’ve finally got time for video games. And I can sleep late. I don’t need to be on time for school.
+
+Emre: That’s true. It’s nice to sleep late. What else do you do?
+
+Kerem: Not much. I read, watch TV … and you?
+
+Emre: I have a great time every summer. I work on my uncle’s farm.
+
+Kerem: Farm work? Really? A great time?
+
+Emre: Yes. It's great to be with my uncle's family. My uncle shows me how to care for the animals. It’s difficult, but it’s fun.
+
+Kerem: That’s a lot of work. When do you relax?
+
+Emre: Almost never. We can’t waste any time being lazy … so no TV or video games.
+
+Kerem: Waste time? Lazy? Hmm … OK, well, look at the time! I must be going.
+
+Emre: I’m sorry, Kerem. I didn’t mean … It’s just, well, there’s too much work! But in the evenings, I sit outside with my aunt and uncle. We laugh at my aunt’s stories. We sometimes play games. There’s some time for fun, just not much.
+
+Kerem: It’s OK. It really does sound like fun. You won’t be bored at all.
+
+Emre: That’s true. But I will be tired!`,
+
+        "WW4_U1L3": `My Family 
+
+Hello! I'm Marta Romero and this is my family! We live on a farm. It's really cool.
+
+I'm ten years old and I go to Minerva Secondary School. I play the piano. I have lessons every Saturday. It's great! Next week I'm playing the piano at a party. In this picture I'm not playing music. I'm sitting on the grass.
+
+There's a picture of my brother, Samuel, too. He's twelve and he likes football. He's OK, but he's very lazy sometimes! At the moment, he's staying with our cousin in Colombia. He's coming back next month.
+
+The photo of the diver is of Mum on holiday last year. She really loves swimming and diving. My dad doesn't swim. He likes watching football on TV instead. In the picture, he's watching a World Cup match.
+
+The other picture is of my horse, Ollie. He eats grass and carrots. In the photo, he's running. He's really fast!`,
+
+        "WW4_U2L1": `Hi! I’m Alek. Look at my new bedroom. Isn’t it great? My old bedroom was so awful! It was my older sister’s room, but she moved out. So, I moved in – to a pink and purple room! For many years, my parents didn’t paint it. They said the room was fine.
+
+It wasn’t fine at all. I hated this room. I wanted to sleep in the living room – that’s how bad it was. Finally, I asked my mum to change it. ‘Well,’ she said. ‘We’re not rich. It’s a lot of money to change a room. But we can give you some money, and you can pay the rest. Then, you can do what you want.’
+
+I was so excited! I planned the room first. I saved my money for paint and a new rug. I was careful to pick the best things.
+
+Now my room is so cool. It’s really my room. I’m crazy about music, so this is the perfect room for me. It’s all black and white. One wall is a chalkboard. I can write on it. And my bed looks like a piano. This room is a great place to listen to music, play my guitar and write songs. I love my new bedroom. I never leave it!`,
+
+        "WW4_U2L3": `My home
+
+Jian, 10
+My family and I live in a houseboat. It's small but it's got two bedrooms, a kitchen and a bathroom. There's a large table with chairs in the kitchen. There's also a microwave oven for cooking. It's even got a washing machine. It's really cool!
+
+Omar, 12
+We lived in a large flat next to a river for many years. We had a beautiful sitting room and a long balcony with a great view of a large garden. But it was too big. So last year we moved into a small, modern house. Now we live near my grandparents. We visit them often.
+
+Ingrid, 11
+My family and I live in a huge old house in the centre of town. It's got seven bedrooms, three bathrooms and two sitting rooms. I'm an only child, so we don't use all the rooms. Some rooms haven't got any furniture at all, and there isn't a very nice view from my bedroom. I don't hate my home, but I don't love it either!
+
+Katia, 14
+We bought our flat three years ago. We haven't got a garden but we've got a big balcony and a beautiful dining room with a view of a park. I really like our home.`,
+
+        "WW4_U3L1": `What were you doing last weekend?
+
+Maybe you were reading a book or playing video games. These are good hobbies, but are you really seeing the world from your sofa? Why not try something new? It’s time to get out and explore!
+
+Take up an exciting hobby—scuba diving! You can be up close with all the beautiful underwater plants and animals. It’s good exercise and great fun. But it can be dangerous. Before you dive, you must learn what to do to stay safe.
+
+Midtown Scuba can help. In our one-week training programme, you learn:
+·      what equipment you need to stay safe
+·      how to turn on and use the equipment
+·      how to move around safely in deep waters
+·      what to do if something goes wrong
+
+You want to be sure you’re safe underwater! Make the right choice and call Midtown Scuba today!`,
+
+        "WW4_U3L3": `Kyra's Blog
+My teacher asked us to think about how our lives changed in five years, so I decided to blog about it. Five years ago, I was nine. I had a lot of free time. I used to play with my toys every day after school. I also used to play board games with my friends. Now that I’m fourteen, things are different. I don’t like to play with toys, of course! I have a lot of homework and I can’t do many fun things. For example, these days I don’t watch TV very often. I used to watch TV for about two hours every day. That was a lot of TV! Now, I go swimming every week. When I was nine, I didn’t use to swim at all. I used to play football for exercise, and I used to play video games. But now, I know how to code. I’m learning how to make my own video games. Next week, I’m going to post a link for you to try out my game, Robot Round-Up. It’s super fun!
+
+So, my free time is very different, but there are some things that I still do. For example, I used to go ice skating at the weekend, and I still do. I also used to read before bed, and I never stopped reading. But now, I’m reading my history books for school, not my favourite story books. And of course, when I was nine, I didn’t use to have a blog. Now, I blog all the time! What about you? How is your life different from five years ago? Write your comments below.
+
+COMMENTS: Great post, Kyra! It looks like you’re doing more interesting things than you used to do. I am learning to scuba dive now. When I was nine, I used to go swimming in the pool. Scuba diving is very different from swimming, but I think it’s much more fun!`,
+
+        "WW4_U4L1": `Elena: Let’s go and eat. There’s a huge breakfast buffet in the hotel lobby. 
+
+Julio: OK. Hang on! I’m brushing my teeth.
+
+Elena: Hurry up! I can’t wait. I’m so hungry.
+
+[At the buffet]
+Julio: Wow, look at all this food! I don’t believe it! How much can we take?
+
+Elena: We can take as much as we want. Look! Those eggs with tomato sauce look great.
+
+Julio: Yes, I’m having some tortillas with my eggs. That’s a real Mexican breakfast.
+
+Elena: Yes, but don’t take too many tortillas. There’s a lot of food. You’ll be full!
+
+Julio: That’s true. I want some fruit, too.
+
+Elena: Yes, and try a little of this bread. It smells great.
+
+Julio: OK. And look at this. What is it?  
+
+Elena: I've got no idea!  
+
+Waiter: Excuse me. Those are frijoles—fried beans. They’re delicious. You must try them! Can I bring you some juice?
+
+Elena: Yes, please. I’ll have a mango juice.
+
+Julio: And I’ll have a little orange juice.
+
+[After breakfast]
+Elena: Wow! This breakfast was the best. But, I ate too much. I’m really full. 
+
+Julio: Not me. The food in Mexico is so good, I’ll be ready to have a snack soon.`,
+
+        "WW4_U4L3": `Spicy Hot Chocolate
+
+This is a delicious hot chocolate recipe that’s also a little spicy. It will warm you up on a cold day! Makes four servings.
+
+You need: 
+· 50 g white sugar
+· 50 g cocoa powder
+· 2 tablespoons chilli powder
+· 230 ml boiling water
+· 1 red chilli pepper, sliced thinly
+· 450 ml milk
+
+How to make Spicy Hot Chocolate:
+1 Put the sugar, cocoa powder and chilli powder in a pan.
+2 Heat the pan gently.
+3 Add the water and pepper slices and mix together.
+4 Boil everything together for five minutes. Then, turn heat down.
+5 Add the milk and heat until it is warm.
+6 Remove the pepper slices with a spoon.
+7 Pour into mugs and serve. You can even put a little cocoa powder on top, if you want.`,
+
+        "WW4_U5L1": `HelpMe Hal Answers Your Questions
+
+Dear HelpMe Hal,
+I’ve just moved to Berlin, and this is my first term at Handel School. I’ve been at the school two weeks, and I haven’t met any new friends. I have tried to talk to classmates after the bell rings at the end of the lessons, but nobody says much to me at all. Well, one person did. She told me that I can't wear a sweatshirt over my uniform. I’m really friendly, and want to meet people. I’ve never changed schools before. I don’t know what to do. Please help! 
+Lonely Lea
+
+Dear Lonely Lea,
+Congratulations! You’ve taken your first step. Writing a letter to the school magazine is a great thing to do. Now, people will know that there’s a super-friendly new student. Here are some ideas for making friends. First, don’t talk to friends after the bell rings. Most people must move quickly to their next lesson. It’s not you—people haven’t got the time to talk. Instead, ask to sit with classmates at lunch, in the canteen. You’ll have more time. Or, go out into the playground during the break. Find people doing something that is interesting to you, and talk to them. You’ll have friends in no time!
+Good luck,
+HelpMe Hal`,
+
+        "WW4_U5L3": `Who's new at school?
+
+This year, there are a lot of new teachers at school and today we are interviewing one of them, Mr Romero, the new French teacher.
+
+Angela: Mr Romero, why did you come to Silva Community School?
+
+Mr R: Well, I was working in France but one day I saw an advert for this job on the Internet. I came back home, got the job and here I am!
+
+Angela: So how long have you been teaching here?
+
+Mr R: Let me see. Three months, I think. Yes, I moved here in the summer holidays and then we started lessons in September.
+
+Angela: Have you ever taught in this town before?
+
+Mr R: Yes, I have. I worked in a school in the town centre a few years ago. I love it here.
+
+Angela: Have you taught in many other schools?
+
+Mr R:  No, I haven't. Just three: one in France and two here.
+
+Angela: Have you met many new people since you came back?
+
+Mr R: Yes, I have because it isn't a big town. Everyone knows everyone else. That's nice! My daughter Elsa has made lots of friends, too. And there are many people here we have known for a long time, because I'm from this town.
+
+Angela: Well it was nice talking to you, Mr Romero. I hope you don't give us too much homework!`,
+
+        "WW4_U6L1": `You’ve got a cold. Now what?  
+
+You’re coughing. You’re sneezing. You’ve got earache. You feel awful! What’s wrong?
+
+It sounds like you caught a cold. Colds are common in young people. In fact, young children get about six to eight colds a year. But how? Unfortunately, it’s very easy to catch a cold!
+
+Has your mother ever told you to put your coat and hat on so you don’t catch a cold? Well, you can’t actually get a cold from being cold. Rather, you caught the cold the moment a virus entered your body. Once inside, the virus takes up to three days to make you ill. If you’ve got a cold, you can easily share it. Someone can catch your cold by touching you or anything you’ve touched.
+
+Colds often last for a week to ten days. Rest during this time, and drink lots of water and juice. If you have aches all over your body, get a thermometer and check your temperature. If your temperature is too high, you may have something worse than a cold. Check with your mum or dad, or go to the doctor. Take care of yourself. It’s no fun being ill!`,
+
+        "WW4_U6L3": `Tips for Healthy Living
+Kids don’t often think about aches and pains. They just want to play and have fun, don’t they? But even kids need to make sure they take good care of themselves. Follow these easy tips to have a healthy life.
+
+·      Stay active! Don’t spend all your time in front of a screen. Your body gets weak if you don’t use it. Play a sport, go running or simply go for a walk, but get outside.
+·      Make sure you eat different types of healthy foods, including lots of fruit and vegetables. And drink lots of water to keep your body hydrated, especially when you’re exercising or outside in the sun!
+·      Get enough sleep. Try to sleep at least nine hours each night.
+·      Be careful of what you put in your school bag! Too many books can give you backache. Try to take only two or three books home at a time. And leave anything you don’t need at school. If your bag is still too heavy, ask a friend to help you carry something.
+·      When you do exercise, make sure you stretch. If body parts like your ankles, knees and wrists are weak, you can injure them easily. Regular stretching helps make these body parts strong.
+·    Make sure you visit the doctor every year. Even if you don’t feel ill, it’s important that your doctor sees you. She might discover a problem that you didn’t know about. You should also talk to your doctor about things like trying new sports.`,
+
+        "WW4_U7L1": `Rosa: Bruno, I’m so excited. We’re going to visit Costa Rica this summer.  
+
+Bruno: Cool! Where are you going in Costa Rica? 
+
+Rosa: We’re going to explore a huge national park, Parque Tortuguero. 
+
+Bruno: How long will you be there?  
+
+Rosa: We’re going to spend four days there. 
+
+Bruno: What are you going to do there? 
+
+Rosa: Well, there’s a jungle, a volcano and a beach. We’ll explore all three.
+
+Bruno: How are you going to explore the jungle?  
+
+Rosa: Well, on the first day, we’ll walk through the jungle. I’m going to take lots of photos. There’s amazing wildlife, like the red-eyed tree frog and the green iguana. It’s going to be awesome! 
+
+Bruno: And on the second day?
+
+Rosa: We’re going on a boat tour through the jungle. I’m sure we’ll see monkeys and crocodiles— they’re everywhere. On the third day, we’ll explore the area near the Arenal Volcano. It’s one of the most active volcanoes on Earth!  
+
+Bruno: Really? Will you be safe? 
+
+Rosa: Of course. They’re not going to take us if it’s erupting.
+
+Bruno: I hope not! And what will you do on the fourth day?
+
+Rosa: This is the day I’m most excited about. We’re going to visit the beach to see where the turtles lay their eggs. We’re going to see some baby turtles in the sand.
+
+Bruno: Sounds great, Rosa!`,
+
+        "WW4_U7L3": `Let’s Take Care of our Turtles!\nTurtles are amazing creatures, aren’t they? Turtles have been on Earth for millions of years, but now nearly 70 per cent of turtle species are endangered. \n\nSome of the reasons that turtles are endangered include: \n·      People want to have turtles as pets, but they’re not surviving and having babies like they do in the wild.\n·      More and more people are eating turtle meat, which causes population loss.\n·      Turtles get caught in fishing nets by accident and are dying.\n·      Hungry turtles are eating plastic that’s in the ocean, which is making them sick.\n\nAround the world, people have opened turtle sanctuaries—protected areas that help turtles stay alive and protect their eggs. One example is in Bora Bora. In 1991, a tourist at the Hotel Le Méridien brought an injured turtle to the hotel. After that, the hotel opened a turtle protection centre. It works to help turtles protect their babies, treat injured turtles and teach hotel visitors about the danger turtles are in. The sanctuary is a success, and it’s growing. Visitors are returning home and sharing the message about endangered turtles. And this is just one example. By sharing information and helping turtles, we can make a difference, can’t we?`,
+
+        "WW4_U8L1": `Sai Tso Wan Recreation Centre: From Landfill to Lovely\n\nHow one landfill in Hong Kong became a popular park\n\nThe Sai Tso Wan Recreation Centre shows that if we work to improve our environment, we will make a difference in people's lives!\n\nThen (Before 1995)\n· This land was the Sai Tso Wan Landfill.\n· Hong Kong dumped 1.6 million tonnes of rubbish here. \n· This rubbish took up two hectares (five acres) of land.\n· This area used to smell really bad!\n\nWhat changed (1995-2004)\n· Workers covered the rubbish with clean soil.\n· They checked to see if the land was safe to use. \n· They made sure the park’s energy came from the sun and wind. \n· They created a system to collect rainwater for the park.\n\nNow (2004-present)  \n· There is a huge playground with a rubber floor. \n· There is a jogging track.\n· There are fields for football and baseball. In fact, the park is the official training site for the Hong Kong Baseball Association, the national baseball team.\n· There’s an environmental centre to teach visitors about how Hong Kong handles rubbish.`,
+
+        "WW4_U8L3": `Go Green\n\nEnrique, 13, Galápagos Islands\nEnrique: I live on a beautiful island. A lot of tourists come here every year and they throw away a lot of rubbish. My friends and I tell people, ‘Never throw rubbish in the street or on the beach, always use a recycling bin or a litter bin.' We often clean the beach near our village and throw away the rubbish. There are so many amazing creatures living on our island! We must protect them from pollution.\n\nSofia, 12, Lisbon\nSofia: If you plant a tree near your house, the shade will keep your home cool in the summer. Then, after the leaves fall in the autumn, the sun will heat your house. Trees are also good because they make oxygen. We breathe in oxygen so we can’t live without it! Another thing you can do is use a fan instead of air conditioning because it saves energy.\n\nCarlos, 11, Madrid\nCarlos: Do you eat snacks and then throw away your dinner? That is a waste! We throw away a lot of food every year. Making that food uses a lot of energy! Another way to go green is to use your bike or walk instead of using a car. Going green is easy!\n\nAmina, 12, Dubai\nAmina: Don’t waste things! If a tap drips, you will waste a lot of water. One drop of water each second is over 10,000 litres of water a year! Also, find a recycling centre near you and recycle everything you can. And remember that you can use things again. You can use the same plastic bags many times before you recycle them, for example.`,
+
+        "WW4_U9L1": `Treasure Find; City Scavenger Hunt\n\nWhat is Treasure Find?\nIn a Treasure Find activity, you look for treasure in a city. We design each Treasure Find activity to help you explore a city and to learn about its most famous sights.\n\nHow does it work?\nFirst, find a team of 3–4 people. It’s better to explore in a group. You must download the Treasure Find app. The phone will know your location. Touch ‘Start’ to begin your adventure. The app then gives you directions to your first place. Follow the directions to the first place. They’re usually important buildings, statues or public parks.\n\nOnce you arrive, you’ll get information about the place. You will have 30 seconds to study the information, and then you’ll get a test. If you pass the test, you get easy directions to the next place. If not, the directions can be very difficult.\n\nHow do we win?\nTo win, your team has to go from place to place quickly. Once you get to the last place, there is a Treasure Find sign. Stand next to it and take a photo. Send your photo through the Treasure Find app. The app marks your time. Then, the Treasure Find team sends a message to the winner for each city. The winner each month gets a great prize!\n\nWhat are you waiting for? Start your adventure today!`,
+
+        "WW4_U9L3": `City Guide\n\nDear City Guide,\nThere are two things I really like about living in Barcelona. The first is that the city is by the sea. Visitors should bring swimming costumes so that they can swim. The second is that the city is really beautiful and there are some really amazing buildings. You might spend all day walking around, so make sure you bring comfortable shoes and a camera. \nMaria Cortez\n\nDear City Guide,\nI love living in Melbourne because you can meet so many people. There are people here from all over the world. Some days you might hear ten different languages! I also like the fact that you can get lots of different kinds of food. I always like to try new things to eat.\nPaul Bell\n\nDear City Guide,\nOne reason that I like Buenos Aires is because it’s so green. There are a lot of parks and everyone goes to them often. You can go for a walk, have a picnic or go jogging. I especially love the Botanical Garden. It’s got so many beautiful flowers! There are also fantastic museums, and many of them are free. The shops are brilliant, too!\nSandra Fernandez`,
+
+        "WW4_U10L1": `Sharing Photos: Then and Now\n\n1980\nI love taking photos with my new camera and sharing them with my friends. It's quite easy. First, I buy a roll of film and put it into the camera. I usually buy a film that takes 24 photos. When it's full, I carefully take the film out of the camera and take it to the photo shop. There, the photos are printed. A few days later, I go and pick them up. Some of the photos aren't great, so I throw these away. I put the good ones in an album. How do I share my photos? I take the album to my friend's house, and I show it to her. We sit down and look at the photos together.\n\nToday\nSharing photos? I do it all the time. Whenever I see something beautiful or something really cool happens, I take a photo. I might even just take a selfie when I haven't got anything else to take photos of. After I take a photo, I might change it in some way—put a sticker on it or change the colours. When I'm happy with the photo, I'm ready to share it. I post the photo on social media for my friends and family to see. It's fun to read everybody's comments on my photos. If I'm having a busy day, I might post three or four times—maybe more. Sharing photos is my favourite pastime!`,
+
+        "WW4_U10L3": `Do you watch many videos that people post online? People post different types of videos, showing their pets or a special talent, for example. If the video is interesting or funny, others share it. That might happen over and over. Before long, the videos can get a lot of followers. Suddenly, even if they don’t want to be, the people in them become Internet stars!\n\nThis happened to Evan. With his father’s help, Evan began making videos in 2011, when he was just six years old. Now, his online channel has got over 1.3 million followers. People − mostly children − have watched his videos more than 1.2 billion times!\n\nWhy do so many children like Evan’s videos? His father says it’s because children feel like Evan is their friend. The videos are funny and interesting. Some show Evan's adventures with his younger sister, Jillian. But it’s Evan’s toy reviews that made him famous. He plays with the toys and says what he likes about them. Now, many toy companies come to Evan with new toys for him to review. Evan has been in TV adverts for toys. And Evan and Jillian have even been voices on a cartoon.\n\nCompanies pay the family for adverts on Evan's channel. But to them, it’s not about the money. Evan saves everything he earns for college, and he gives away most of the toys he reviews. Smart, generous and funny – it’s no wonder Evan is so popular!`,
+
+        "WW4_U11L1": `Car-free Cities?\nTraffic is a big problem around the world. In Los Angeles, USA, people spend 90 hours a year in traffic. It’s worse in Rio de Janeiro, Brazil, at 100 hours per year. The worst is Mexico City. Residents there lose over 200 hours each year. And drivers in the UK spend more than 100 days of their lives looking for parking!\n\nMany cities want to improve transport. Planners in Helsinki, Finland, want to make cars unnecessary by 2025. They’re creating an app to let users find the best transport for their trip, including buses, trains, shared bikes, ferries and taxis. The user enters a location and destination, and the app plans the trip using the best types of transport. This will be faster and cheaper.\n\nHelsinki has also got more than 1,200 km (745 mi.) of bike lanes. There’s a huge bus system with over 1,000 bus stops. There are trams and underground trains. There’s even a new minibus service. People get on wherever they are, and get off right at their destination, instead of at a bus stop. Many of the roads in the town centre are for pedestrians only, so no traffic is allowed.\n\nWill this work? Possibly. Younger people want simple, cheap transport that’s green—not cars. By 2025, Helsinki will surely have fewer cars, and it may just be car-free!`,
+
+        "WW4_U11L3": `Travel Guide\n\nVenice, Italy\nIn Venice, there are buses and taxis just like any other city but they travel on water instead of roads! The water bus is called the Vaporetto and it works just like an ordinary bus. You can get a single ticket, a ticket to travel for 1–3 days or a weekly pass. Some visitors like riding in gondolas, but they’re too expensive for others. It doesn’t really matter, however. The Vaporettos and the water taxis aren’t as romantic as gondolas, but they’re good enough for getting around, and they run every day.\n\nSan Francisco, USA\nIn San Francisco getting around is really easy – there are all kinds of transport: buses, underground trains and shared cars and bikes. The oldest and the best, however, are the cable cars. Some of them are modern but others are just like the cable cars that used to be in the city a hundred years ago. You can use special tickets for all means of transport for 90 minutes, and they’re not too expensive. Some people think that walking in the city is too difficult because of the hills. Cable cars are a fun way to get up and down the city's steep hills!\n\nMedellin, Colombia\nMedellin is becoming a popular tourist destination. People come for the museums, gardens and its huge aquarium. But the top tourist attraction in Medellin is actually a means of transport: the Medellin Metrocable. The Metrocable has more than 30,000 riders each day on its three lines, many of them tourists. It’s a great way to get a beautiful view of the city from above. The Metrocable is part of the city’s larger Metro system, which lets you explore the entire city underground or in the sky. The tickets are very inexpensive, too!`,
+
+        "WW4_U12L1": `You Do What?!\n\nWhat job do you want to have when you get older? A doctor? A police officer? Or are you looking for something different? If so, you might want to think about these unusual jobs.\n\nWater-Slide Tester\nIf you like water slides, this might be the job for you. You get to travel to waterparks around the world and try out their newest slides. The job sounds like it’s all fun, but testers are also checking for safety. So, this job can be dangerous. You also need to have social media skills. After each test, you must post your opinion about the slide on social media. To get this job, you must be fun-loving and crazy about waterparks!\n\nQueue-sitter\nAre you a very patient person? Are you happy to spend an afternoon waiting at the bank or tax office? If so, you could easily be a queue-sitter. One queue-sitter in Italy earns 10€ an hour patiently waiting in queues for his customers. ‘I am the person who will wait in line for those who don't have the time or desire,’ he says.\n\nFood taster\nFood companies look for people with a strong sense of smell and taste to help them create new food products. Some tasters try a lot of different types of food. Others just taste one type of food, like ice cream. One ice-cream taster says she might taste 250 flavours in a day. After work, she goes for walks to stay healthy!`,
+
+        "WW4_U12L3": `What do you want to be?\n\nJian: I'm not sure what I'm going to do. I used to think about getting a job as a police officer or a detective, but I don't think I'm brave enough. I enjoy playing football, but I'm not good enough to be a professional. So, I want two part-time jobs. I'd like to be a football coach. I also want to be an artist because I love painting. This would let me turn my hobbies into jobs!\n\nTori: I know exactly what I'm going to do. I have always loved cooking so I'm going to be a chef. I'll go to college for about two years where I'll learn all about cooking. Then I'll work in a kitchen until I can become a real chef. I'm going to buy a restaurant and have lots of staff to help me! If I'm lucky, I will even have a TV show.\n\nEliza: I love animals more than anything. I've wanted to be a vet since I was ten. You have to study for about seven years, and you have to be very clever and get good marks for all your exams. You must have work experience with animals, too. My only worry is that seeing so many sick animals will make me sad.`,
+  
+        // ---------------- WW5 (第五册) ----------------
+        "WW5_U1L1": `Friday, 10 July\nI’m so excited: we’re leaving for Peru tomorrow! Our first stop is the capital, Lima. We’ll be visiting some of Lima’s beautiful churches. We’ll also see the monument honouring Peru’s national hero, José de San Martín.\n\nSunday, 12 July\nToday, we’re going to Cusco, the oldest city on the continent. It’s also among the highest, at 3,400 m (11,150 ft.) above sea level. We’re visiting Cusco Cathedral, which took almost 100 years to build. We’re also eating some Peruvian dishes, including ceviche, raw fish in lime juice.\n\nMonday, 13 July\nWe’re going to Machu Picchu today. This is a city of Incan ruins, found high in the Andes Mountains. Machu Picchu was very important during the Incan empire, but was forgotten until 1911, when an explorer named Hiram Bingham found the city. Today, it’s one of the most popular tourist destinations in the world.\n\nTuesday, 14 July\nToday, we’re visiting Ollantaytambo. This historic fort is made from huge fifty-ton stones. What’s fascinating is that the blocks came from an area over 5 km (3.1 mi.) away. People moved the blocks down a mountain, across a river, and up another mountain to build the fort − with no trucks or trains!\n\nFriday, 17 July\nToday, we’re in Puno, a small town near the Bolivian border. From Puno, we’re taking a boat to the Uros Islands. People live in straw houses on these floating islands. Some of the straw houses are simple, but others are quite modern: they’ve even got satellite TV and WiFi!\n\nSunday, 19 July\nUnfortunately, our next destination is Lima’s airport. It’s time to go home. Goodbye, Peru!`,
+
+        "WW5_U1L3": `Ahmad, 17, India \nNot many people who visit India know about the Darjeeling Himalayan Railway. There’s a special train which uses the railway called the ‘Toy Train’ because it’s so small. The journey to the town of Darjeeling is very slow because the route through the mountains is steep and narrow. The 80-km (50-mi.) journey can take up to 10 hours, but the views are really impressive! \n\nTina, 16, New Zealand \nNorway is the place where you expect to find fjords, but we have our own ‘Fiordland’ in New Zealand! Some of the fjords, which are deep lakes between high mountains, are over 200 m (656 ft.) deep! Parts of the Lord of the Rings film trilogy were filmed in Fiordland, so now it's popular with tourists who love these films. \n\nPetros, 13, Greece\nGreece is famous for its ancient monuments and sandy beaches, but did you know about its mountains, gorges and rivers? Zagori, in Epirus, is a fantastic mountain area in the north of Greece. There are many paths. Some have got old bridges over the rivers and the gorges. There are other paths which you can take to walk to the tops of the mountains. I'm going there this spring. I can't wait!`,
+
+        "WW5_U2L1": `Power in the Path \n\nHave you ever taken a bike ride in the sun? It might make your ride a little hotter, but a cycle path in a sunny area can be a good thing. In fact, in the Netherlands, one company decided to build a cycle path that can create energy using the sun. \n\nIn the town of Krommenie, there’s a 70 m. (230 ft.) cycle path with solar panels built into it. These panels absorb light from the sun’s rays. They then use that light to create electricity, which can power specific things (like street lights) or go right into the electrical grid. In its first year, this short path was creating enough energy to power one house for a whole year! \n\nDevelopers are still doing research. They must make sure the path is strong enough for buses and trucks to drive over it. They must also make sure the path isn’t too smooth because that could get slippery, causing cyclists to fall. This test path must be just right before this type of path can be built in other places. \n\nIn another Dutch town, Eindhoven, there’s a cycle path that uses solar energy to make art. The path, which opened in 2014, is made up of thousands of tiny lights that absorb the sun during the day and glow at night. From above, these lights combine to look like the famous painting The Starry Night by Dutch artist Vincent van Gogh. This one-kilometre path is part of a larger cycle path that honours van Gogh, who lived in this area from 1883 to 1885. It’s a beautiful and creative way of using the power of the sun, and the path now attracts many visitors.`,
+
+        "WW5_U2L3": `When people hear the word ‘technology’, many think of the newest, most modern robots or electronic gadgets. But technology is defined as the use of science to make new things and solve problems. People have always used technology to solve problems. Take a look at some technologies of the past that really changed how humans live. \n\nAround 2.6 million years ago \nOur ancestors begin using simple stone tools as hammers and knives. This may be considered the earliest use of technology. \n\nAround 25,000 years ago\nThe sewing needle is invented, which means that it's much easier for people to make and wear clothes, something that they had begun doing about 170,000 years ago.\n\nAround 5,500 years ago \nThe wheel is invented in Mesopotamia in 3500 BCE. This technology is originally developed for potters. It takes 300 years for the wheel to be used for transport. \n\nAround 600 years ago \nIn 1439, Johannes Gutenberg demonstrates the printing press. With this machine, it’s possible to create many copies of a paper in little time. The printing press leads to the spread of information through books and newspapers. \n\nAround 150 years ago \nBy the late 1800s, different inventors are working on the automobile. Karl Friedrich Benz creates the first automobile powered by petrol. It looks more like a bike than a car! \n\nAround 100 years ago \nOn 25 March 1925, John Logie Baird shows the first televised images in motion at a London department store. The invention of the TV set brings the world into people’s homes. \n\nSince the 1970s\nThe first mobile telephone call takes place in 1973, and mobile phones become more common by the mid-1980s. By 1993, the first smartphone is invented these gadgets have since changed how we do almost everything!`,
+
+        "WW5_U3L1": `What to Do About Wildfires \n\nNature can be beautiful, but it can also be dangerous. Take wildfires, for example. More and more wildfires have been burning recently. They’ve burnt millions of hectares in the last few years. Wildfires occur most often in the western USA, but they can happen anywhere. \n\nNatural causes like lightning and hot sun have caused wildfires, but four out of five wildfires are started by humans. Once a wildfire starts, it burns anything in its path such as trees, bushes and even buildings. Dry weather and high winds help wildfires spread, and they can move very quickly, up to 23 km (14 mi.) an hour. \n\nSo, what should you do to prevent a wildfire? First, always be careful around fire. Follow fire safety rules in parks and public areas, especially when camping. And if you do make a fire outdoors, be sure that you put it out completely. Even if you’re careful, you should be prepared for a wildfire. If one starts in your area, check TV, radio and emergency alerts for smartphones to learn what to do. Pay attention to the fire and communicate with emergency workers. Always follow their instructions. \n\nWildfires can be scary, but did you know they can actually help a forest? The fire kills sick plants and harmful insects that have been living in the forest's ecosystem. Certain animals do better in the burnt-out habitat that fires create. And by burning trees and their leaves, wildfires allow sunlight to reach the forest floor, so light can reach seedlings and help them grow into new plants. Wildfires are dangerous and can cause a lot of damage. But they’re also a part of the natural world, and they can be healthy for a forest. So, we can’t simply view them as destruction, but also as nature making room for new beginnings.`,
+
+        "WW5_U3L3": `2 January \nI’m so excited to be in Iceland this weekend. This morning, we got on a bus to the southern coast, to see some of Iceland’s natural beauty. We’re going to try to see the Northern Lights tomorrow night. Even if we don’t see them, I’ve already seen some of the most amazing sights on the journey. \n\nWe stopped in a national park today and explored an ice cave. They call it the ‘Crystal Cave’ because the ice is as clear as crystal. Exploring ice caves can be dangerous, so we went with a guide. We had to wear special boots − the least comfortable boots I’ve ever worn − but it was worth it. \n\n3 January \nToday we explored the Jökulsárlón glacier lagoon. It’s a large lake made from melted glaciers, and the coldest lake I’ve ever visited! I did NOT want to go swimming. We also saw waterfalls, and a black sand beach. It was nothing like the beaches near us. The guide said it was called ‘Diamond Beach’ because the black sand shines like diamonds. \n\nAt night, we went out to look for the Northern Lights. They occur when the Sun meets certain gases in the Earth’s atmosphere. It’s hard to know when they’ll appear. But we got lucky and saw them the first night. They were green and purple. It was incredible − a light show by nature. I’ve never seen anything more amazing in my life! \n\nSadly, we're leaving tomorrow. It went too fast, but I’ll remember this weekend better than any other. It was amazing!`,
+
+        "WW5_U4L1": `The Legendary Bermuda Triangle: A Mystery No More\n\nFor years, people have believed that an area of the Atlantic Ocean between Bermuda, Puerto Rico and Florida, USA was a dangerous place. They thought planes and boats passing through here were likely to disappear. By 1964, a writer had called the area the ‘Bermuda Triangle’. The name stuck, and so did the mystery.\n\nIn 1945, five US Navy planes, called Flight 19, took off from Florida and never came back. After they disappeared into the Bermuda Triangle, theories had begun to spread that the area was a danger zone. Even before this famous flight, several ships had disappeared in these waters. People had many different ideas about why this happened. Some people even believed that a giant octopus was responsible!\n\nHowever, scientists believe that weather is part of the problem. Unusually shaped clouds above the area create strong winds that go down into the water, creating huge tsunami waves that can take down boats or low-flying planes. And many researchers believe that there’s no mystery at all. Shipwrecks and plane crashes happen all over the world. It just seems to happen more in the Bermuda Triangle because there’s more traffic.\n\nThe Bermuda Triangle is also one of the deepest areas of the Atlantic, with some areas being 8 km (5 mi.) deep. So, remains are hard to find, which makes the disappearances seem even more mysterious. In 2011, the Flight 19 planes were found, proving that they didn’t completely disappear. But no matter how much evidence there is that the Bermuda Triangle is no more dangerous than any other part of the ocean, many still believe that you mustn't go there.`,
+
+        "WW5_U4L3": `Anansi the spider knew that he was very clever but he also knew he wasn’t wise. He didn’t like this, but he did not know what to do. One day he had an idea. He went around the village with a basket and asked each person to give him some of their wisdom. The people laughed at Anansi because they knew that of all the creatures, he needed wisdom the most. So each person put a bit in his basket and wished him good luck with his search.\n\nSoon his basket was full, but Anansi was worried that someone might be jealous of his wisdom and take it from him. He decided to hide it at the top of a tall tree. When he had tied the basket to the front part of his body, he tried to climb the tree, but it was too difficult. He tried again and again without success. \n\nThen his youngest son walked by. ‘What are you doing, father?’ he asked and Anansi told him. ‘Why don’t you carry the basket on your back instead?’ his son said. \n\nAnansi put the basket on his back and climbed the tree easily, but he wasn’t happy. ‘I walked all over the village and collected so much wisdom that I am the wisest creature ever, but my baby son is still wiser than me. Take back your wisdom!’ he said. And he threw the basket into the air and went home. With that, wisdom was spread all over the world.`,
+
+        "WW5_U5L1": `Each spring, school careers officers meet with students to talk about their goals for the future.\n\nThey talk about students’ interests, qualifications and what the students will do after finishing school. Next, the careers officer gives students a quiz to learn more about them and their preferences. Here's an example of the type of quiz a careers officer might give. \n\n\nQuiz: What type of career is best for you?\n\n1 Are you going to want to spend time with people at work?\na Yes, all the time\nb Yes, some of the time\nc No, I like working alone\n\n2 How important is it to be well paid?\na Very important\nb Somewhat important\nc The least important part of the job\n\n3 How experienced are you with technology?\na Very experienced\nb Not very experienced, but willing to learn\nc I don’t like working with technology.\n\n4 Are you a leader?\na Yes\nb Sometimes, but I also like to learn from others.\nc No\n\n5 How creative are you?\na Somewhat creative\nb Very creative\nc It depends on my interest\n\nIf you got mostly as, you are ambitious and want to make money. But you will want to help others, too. You’re going to spend a lot of time working too. You might be a doctor, for example.\n\nIf you got mostly bs, you will have a career doing something creative. You’re going to be a teacher or a writer, for example.\n\nIf you got mostly cs, you will work with your hands in some way. Maybe you’re going to work with machines, for example. Think about becoming a mechanic or a gardener.`,
+
+        "WW5_U5L3": `Laura, 15\nI’m about to apply to university for courses in computer science. After university, I’m not going to get a job. I’m going to start my own company and be my own boss! There are so many young people running online companies. I think anyone with an original idea can succeed. By the age of twenty-five, I probably won’t have become a millionaire, but maybe I'll have enough money to buy my own home.\n\nTomás, 17\nI play the guitar in a band called ‘Nobody’s Heroes’. We’ve played a few times at local music festivals and people say we’ve got talent. By the time I’m twenty-five, I hope we will have become famous. Maybe we will have even been on a world tour! My parents are worried that I’m wasting my time and they complain about the noise I make when I’m practising. They hope that I’ll give up music and try to get some qualifications for a career in business or medicine.\n\nChiyo, 16\nI'm not interested in being rich or famous, but I really love travelling and photography! First, I want to study for a degree in languages. I’m determined to travel round the world taking amazing photos of people and places. By the time I’m twenty-five, I hope I will have visited lots of interesting places and had some amazing experiences. Who knows? Maybe I will have sold my photos to magazines! Maybe I will have moved to another country!`,
+
+        "WW5_U6L1": `People Who Changed the World: Charles Darwin\n\nCharles Darwin was a scientist who changed our understanding of the natural world. He is known as the Father of Modern Biology. Darwin spent all his life observing nature and writing about the species he found.\n\nDarwin was born in England in 1809. He was an ordinary student at school, and did not always get the best marks. He was a good athlete though, and loved exploring nature. He was close to his older brother, Erasmus. The two of them would spend lots of time together, doing chemistry experiments.\n\nRobert Darwin was a doctor and expected his son Charles to become one, too. The younger Darwin started studying medicine at Edinburgh University, but soon realised that it was the wrong career: he couldn't even look at blood without feeling sick! He went on to study religion at Cambridge University instead. There, he focused more on insects than on religion. He became extremely interested in collecting beetles, and his interest in biology grew.\n\nIn 1831, at the age of 22, Darwin went on a five-year expedition to South America, Australia and South Africa by ship. His family objected to this voyage, but the things he saw on this journey changed his life. He collected many fossils as well as animal and plant specimens. He spent the rest of his life doing research and writing about what he had seen. \n\nIn 1839, Darwin married Emma Wedgwood with whom he had ten children. To him, family life was always more important than his research. In spite of having many health problems throughout his life, Darwin lived to be 73. \n\nDarwin is best known for his theory of natural selection, which says that animals adapt over time in order for their species to survive. His most famous book On the Origin of Species came out in 1859. Many people objected to the ideas in this book at the time. But most people can agree that Darwin has helped us better understand many species of plants and animals in our world.`,
+
+        "WW5_U6L3": `amazingkids—Calling all kids! The Amazing Kids Organisation wants to know about the cleverest, kindest and most talented children from around the world. Every month, we will be giving a prize to the most amazing kid we see: € 1,000 to help them at university. You can be amazing through your skills or simply by the way you treat other people. We’re looking for people to nominate their friends or family. Just upload a photo of this person doing something amazing, describe this person, and add the hashtag #amazingkidscompetition. Kids must be between the ages of 8 and 18 to take part. We can’t wait to see what amazing things are happening out there! \n\nsofialoletti—My cousin Gina, who is fourteen years old, got first prize in the ‘Young Cook of the Year’ competition. Hundreds of teenage chefs across Italy took part in that competition, and Gina won! She learnt to cook by observing her father, who’s also a great chef. Now, Gina’s writing her own recipe book for kids. Gina wants her book to be fun to read, but easy enough for children to use. She wants to encourage other children to cook because, as she says, ‘Everyone needs to eat, so it’s a skill that will always be useful!’ Gina’s food is really amazing, which makes her an amazing kid! #amazingkidscompetition \n\ncoolrunner871—My brother, Brendan, has always loved running. In fact, we used to run together a lot. But three years ago, he was involved in a serious car accident. He lost part of one leg and didn’t even expect to walk again. He wanted to give up, but he didn’t. Now, at only seventeen years old, he’s an athlete who has recently completed a half marathon. He says, ‘I’m happy to be alive and able to continue running.’ His attitude and strength make him an amazing kid! #amazingkidscompetition`,
+
+        "WW5_U7L1": `To Control Stress, Come to your Senses! \n\nTests, homework, fights with friends or parents … there are lots of things that cause us stress. And stress can harm us in physical and emotional ways. Physically, stress can make our bodies tense. We might get stomach aches, headaches or sore muscles. Emotionally, stress can cause anger and sadness. Stress can also make us less energetic. \n\nWhen we’re too stressed, our bodies and minds simply stop working well. So, it’s important to know how to control stress. One way to do so is by using our five senses. Follow the suggestions below, and you could be feeling better in no time! \n\nTaste \n• Have a cup of warm tea or coffee. \n• Eat a small piece of chocolate. \n• Have your favourite healthy snack, like a piece of fruit or some nuts. \n\nSight \n• Put a vase of flowers on your desk. \n• Look at a favourite photo. \n• Go to a room that’s painted in a relaxing colour, like blue or green.\n\nSmell \n• Go outside and breathe in the fresh air. \n• Light a scented candle. \n• Visit a nearby garden and smell the flowers. \n\nSound \n• Listen to music that makes you feel good. \n• Hum or sing your favourite song. \n• Sit near a stream or a fountain, and listen to the sound of the water moving. \n\nTouch \n• Put on soft, comfortable clothes. \n• Stroke a dog, cat or any other furry animal. Use a stuffed toy if you haven’t got a pet. \n• Have a warm bath.`,
+
+        "WW5_U7L3": `Ask Aisha \nHave you got a problem? Don't worry! Aisha can help!\n\nA\nDear Aisha, \nI need your advice. My best friend recently told me that I should buy new clothes for the gym. She said that my exercise clothes looked terrible, and that I must buy some nicer ones. I think she thought that she was being helpful, but I felt bad when she said that. My gym clothes are old, but they’re comfortable. I don’t care what they look like. And right now, I mustn’t be spending money on gym clothes—I’ve got other things to spend my money on. Should I let it go, or tell my friend that she hurt my feelings? — Claire, 13\n\nB\nDear Aisha,\nRecently, I haven’t been feeling very well. I’m always exhausted. We’ve got exams at school soon and I haven’t got the energy to study. I go to bed early, but sometimes I can’t sleep because I’m so stressed. Please help!— Lara, 14\n\nC\nDear Aisha, \nI’m very upset and I don’t know what to do. My parents are always telling me that I spend too much time online and that I should exercise more. They want to take away my phone. Do you think 4–5 hours a day is too much? The problem is that I really enjoy playing computer games and texting my friends. I don’t really like sports. — Timothy, 12\n\n1\nI’m afraid your parents might be right. It’s not healthy to spend so many hours online. Why don’t you walk or cycle to school so that you get some extra exercise? This way your parents will see that you’re making an effort to exercise more. \n\n2\nFirst of all, you must stop worrying! Try to relax at bedtime by having a warm bath before bed. Think about your diet, too. Are you getting enough vitamins? Doing exercise will also make you feel more energetic. You don’t have to run 10 kilometres a day—even walking for 20 minutes three times a week will help. \n\n3\nDon’t listen to this ‘friend.’ There’s nothing wrong with wearing old clothes to the gym. The most important thing about going to the gym is that you’re doing something positive for your body and mind. It’s not a fashion show, and what you wear isn’t important! You ought to find a best friend that cares about you and not your clothes.`,
+
+        "WW5_U8L1": `People have been creating art since the earliest humans began painting in caves over 40,000 years ago. But for centuries, most art was limited to museums and galleries. Today, more and more art is being created by the people within a community. They aren’t usually paid, and they often aren’t even asked to create the art. Rather, individuals and community groups are deciding that they want to bring their own ideas into public spaces. \n\nIn some cities, monuments, bridges or even forms of transport have been ‘yarn bombed’. In this art form, people create colourful wool cloths to cover dull objects, such as pipes and park benches. Yarn bombing adds a warm feeling to the cold, hard objects found in cities. \n\nPeople also beautify urban areas by making gardens in abandoned areas. Some ‘guerilla gardeners’ just plant flowers, while others think it’s best to plant crops for food. Guerilla gardening began in the UK in 2004, and is now happening in cities around the world. Guerilla gardeners don’t own the land they work on, but they often take care of it as though they do. \n\nYarn bombers and guerrilla gardeners don’t always ask permission to create their art. As a result, some people in the community get angry. The same is true for graffiti artists. Many people don’t like it when people paint on walls without asking. But, as graffiti became more sophisticated over the years, more and more people began to see it as art, not just as damage. Some building owners were inspired to invite artists to create colourful murals on and around their buildings. These designs add interest and often tell the story of the people who live in the community. Like yarn bombing and guerrilla gardening, street art aims to make cities more colourful, enjoyable places to live.`,
+
+        "WW5_U8L3": `Designing People \n\nAM: Today, we’re here with famous costume designer Kiki Maretto. Thank you for talking to Arts Magazine, Kiki. \n\nKiki: Thank you for inviting me. \n\nAM: How did you begin your career in costume design? \n\nKiki: Well, my first costumes were designed for a school play. Later, I began doing plays at a small local theatre. About ten years ago, a film studio called me, and that’s when I started working in film. \n\nAM: You’ve done some great films, including several historical films. How do you design costumes for these films? \n\nKiki: Well, I do lots of research. I look for old photographs. I also find old articles from newspapers and fashion magazines of the time. Every detail matters when you want to represent a certain period. \n\nAM: Do you always find old clothes to use as costumes? \n\nKiki: When we can, we use the clothing people wore at that time, after we repair it, of course. Normally, I create the costumes, though. \n\nAM: What is the process? \n\nKiki: After researching, I draw and plan. I meet with the film’s director and the actors to talk about their costumes. Then, I work on finding the materials to make them. Once I have everything, I get my team together, and we begin to sew. \n\nAM: Have you got a lot of people on your team? \n\nKiki: For a large film, I usually work with about 50 people. \n\nAM: What’s your favourite thing about working on films? \n\nKiki: I really enjoy meeting the actors. It’s very exciting. \n\nAM: I bet it is. And what is most difficult? \n\nKiki: Knowing where everything is. There are so many pieces, and when the director calls for something, it must be there right away. \n\nAM: Interesting! Thanks again for your time, Kiki. \n\nKiki: My pleasure.`,
+
+        "WW5_U9L1": `Q & A : Getting Off the Ground\n\nSports Monthly interviewed 17 year-old extreme athlete Maxim Avilov. We learnt that Maxim just can't seem to keep his feet on the ground!\n\nSM: What extreme sports do you do? \n\nMA: I prefer to be either in the air or in the water. So, I do skydiving, climbing, abseiling, kayaking and scuba diving. \n\nSM: Wow! That’s a lot! When did you start doing them? \n\nMA: I began climbing and abseiling at the age of eight. I started with an instructor who motivated me to climb higher. I quickly got the hang of moving up and down. I decided to go even higher, and began skydiving. I became interested in water sports later. \n\nSM: How do you stay safe at all doing these sports? \n\nMA: Well, it’s all about the equipment. If you don’t have the right equipment, you’ll probably get hurt. For climbing, you need a harness, gloves, a good rope, climbing shoes and a helmet. For kayaking, you need a helmet and a good lifejacket. For scuba diving, you need a quality wetsuit, flippers and goggles. And you can’t dive unless you’ve got oxygen for breathing. \n\nSM: So, is safety just about equipment? Or is it more than that? \n\nMA: It's more than that. People think extreme athletes simply take risks without thinking. But that’s not true at all. For example, when I’m getting ready to go climbing, I’ve got to plan and move carefully. If I lean too far or slip on something, I can really get hurt.\n\nSM: Why do you do such risky sports? \n\nMA: I love the adventure. Extreme sports are very exciting. \n\nSM: Have you got any advice for future extreme athletes? \n\nMA: Always work with an instructor. Take your time and THINK! Extreme sports need extreme planning.`,
+
+        "WW5_U9L3": `Cheese Rolling \nIf you’re ever in the town of Brockworth, England, at the end of May, you’ll have the chance to watch a very strange sport. Cheese rolling has been a tradition there since the 1800s. Someone pushes a large, round piece of cheese down a very steep hill and the competitors chase after it, trying to catch it. If nobody catches it, the person who reaches the bottom of the hill first gets the wheel of cheese! It sounds simple, but lots of people fall and get hurt. One racer said, ‘If I hadn’t run the race, I wouldn’t have believed how steep the hill is!’\n\nIn 2017, 29-year-old competitor Chris Anderson matched the record for most cheeses won. The problem? He doesn’t like the cheese. He says it tastes too strong. But that doesn’t stop him from wanting to come back and break the record. \n\nExtreme Ironing \nPhil Shaw first did extreme ironing after coming home to find a pile of clothes that needed ironing. He took them outside to iron in the garden. Then, he decided that ironing wasn’t so dull if done in the right place. His first extreme event was ironing on a cliff! He’s also done extreme ironing in a kayak, at the top of a tree and even skiing down the Alps. \n\nThe sport became popular and people did creative things to participate. One person even ironed underwater! No matter how ‘extreme’ the sport gets, participants must remember the reason they’re there: to get the wrinkles out of their clothes. In competition, the appearance of the newly ironed clothes is part of the score. \n\nAnd as if extreme ironing weren’t unusual enough, its participants are required to take nicknames! Phil goes by the name of ‘Steam’ when he irons, and his wife, who is also an extreme ironer, is known as ‘Starch’.`,
+
+        "WW5_U10L1": `18 April 2018 \n\nDear Diary, \nLet’s be honest. Most days, school can be pretty dull. But today’s careers fair was incredible. If only every school day were so exciting! There were people with cool jobs: a pilot, a professional footballer … Of course, everyone was in a queue to speak with the footballer. But not me. I spent my time talking to Dr Janine LeBlanc, a marine biologist. I loved her stories so much. I wish I had spent the entire afternoon talking to her. \n\nDr LeBlanc showed me photos of her underwater expeditions and told me all about her work. She studied science, and then went on to specialise in marine biology. In her job, she gets to travel around the world, swimming in the coral reefs where sea turtles live. She’s working to protect the endangered hawksbill turtle, which has lost a lot of its population in recent years. I couldn’t believe it when she told me these reptiles have been living in the seas for 100 million years! They’re really important for the ocean’s ecosystem. But people are hunting them for their eggs, their meat and their shells. Dr LeBlanc wishes people understood how important these animals are in maintaining a healthy ocean. \n\nDr LeBlanc’s work sounds difficult, but our talk made me want to study marine biology. I wish I were old enough to go to college now! It would be so exciting to dive all the time. Of course, Dr Leblanc works in an office, too. She told me that she puts special devices on the turtles to keep track of their activity. Then, she watches their movement on her computer and analyses the impact that human activity has on them. \n\nTalking to Dr LeBlanc inspired me to study marine biology. And she told me that I don’t have to travel to be a marine biologist. I could work right here in the local aquarium. But I would prefer to travel and see the world underwater!`,
+
+        "WW5_U10L3": `Bizarre Creatures from the Deep Sea \n\nIt’s tough to choose the most unusual creatures living deep under the sea. There are so many interesting animals, from vampire squid to sea pens. Curious yet? You can always go online to learn about these amazing animals. In the meantime, here are three of the sea floor’s stranger creatures we’d like you to meet. \n\nYeti Crab\nThere are several species of kiwa—or yeti—crab living in the deepest parts of the southern Pacific Ocean and in the area near Antarctica. These crabs live in complete darkness at around 2,600 m (8,500 ft.) below the surface. But lack of light is not a problem for this species—it’s blind! \n\nThough yeti crabs live near warm water sources, females go into the colder waters to lay eggs. It’s a good thing they’ve got fur to keep them warm! Yes, you read that right. Similar to the character it’s named after—Yeti, or the Abominable Snowman— the yeti crab has got fluffy, white fur covering its claws and legs. What’s more amazing is that these furry claws attract bacteria that the crab then collects and eats. In other words, it farms its own food right on its body. What a way to feed yourself! \n\nRed-lipped Batfish \nThe red-lipped batfish lives on the ocean floor near the Galápagos Islands. This fish’s bright red lips make it look as though it’s wearing lipstick. But that’s not the only strange thing about it. Another is that it’s not a very good swimmer. In fact, it uses its fins as feet, and walks on them across the ocean floor. The batfish also has an unusual horn on its head that it uses to attract prey to its mouth— like a built-in fishing rod! \n\nBlobfish \nThe blobfish was named the 'world’s ugliest animal’ at one point, but that’s not a very fair title. You see, the blobfish loses its shape when it’s out of water because it hasn’t got a muscular system. But when the fish is in its habitat, a high-pressure area off the coast of Australia that’s 600–1,200 m (2,000–4,000 ft.) deep, the water keeps it in shape. At home, the blobfish looks more like any other fish.`,
+
+        "WW5_U11L1": `From Emoticon to Emoji \n\nWhen you send a text message, do you use emojis to communicate? If you’re happy, angry, or, sad, you probably show it with an emoji. Emojis are everywhere—on our clothes, in our houses … there’s even been a film about emojis! So, where did they come from? \n\nTo understand the history of emojis, we must first look at emoticons. What’s the difference? Emoticons, images made from symbols that you type, came first. An emoji—from Japanese e = picture, moji = character—is a picture that shows emotion. Emojis are built into phone keyboards, apps and social media sites. \n\nLet’s start with emoticons. If you think that emoticons started with the rise of the Internet and email, think again! We can’t be sure, but some believe that the first emoticon was used in a line from this poem, written in 1648. \n\nTumble me down, and I will sit Upon my ruins, (smiling yet:) \n\nCan you see the colon before the closing bracket? Did the poet use a smiling face when he talked about smiling yet? Maybe, though not everyone agrees. Some English professors have said that people didn’t always focus on correct punctuation long ago. They say the smile was simply a mistake. \n\nMore than 200 years later, in 1881, a popular magazine published the faces below out of punctuation marks. This is the first clear example of emoticons being used on purpose. \n\nIn 1982, computer science professor Scott Fahlman suggested that people use a smiley face. He said that people needed to show they were joking when typing messages. This was because many people had believed a message posted about a fake emergency. With Fahlman’s idea, the modern emoticon was born! \n\nIn the mid-1990s, the Japanese mobile phone company Docomo added a heart symbol to its devices, and young people loved them. The company noticed how popular the symbol was, and asked designer Shigetaka Kurita to create more. By 1999, Kurita had created a group of 176 emojis. Around 2010, emojis were added to mobile phone keyboards worldwide … and the rest is history!`,
+
+        "WW5_U11L3": `Talking or Texting: How should we spend our time? \n\nThese days, most teenagers have got a smartphone. But do they like using them more than talking to their friends in person? We interviewed hundreds of teens, and the answers were mixed. \n\nOn a Smartphone \nPros \nClaude: Communicating with my friends on my smartphone is awesome. I can text them whenever I want. If I’m feeling happy, excited … whatever … I can share that emotion right away.\n\nSophie: It’s so convenient to text or send instant messages and photos on my phone. It’s especially useful if I’m shopping. For example, today my mum sent me to the shop to buy her yogurt. I took a picture to show her all the different varieties. Then she picked just what she wanted.\n\nCons\nAhmed: For me, the problem is money. My parents pay for the cheapest plan. So, last month, I sent too many texts, and used too much data. Now I’ve got to pay my parents for the extra charges. For me, spending time with my friends in person is less expensive!\n\nBea: When I text, my friends never understand what I’m trying to say. It takes too long to explain myself. And often, my friends don’t respond straight away. All that work and no answer? That’s frustrating!\n\nIn person \nPros\nFarrah: I really prefer to spend time talking with my friends in person. It’s so much more meaningful than just texting. When my sister got a new job, I was so excited for her. I hugged her and held her hands. That type of real connection just doesn’t take place in a text, no matter how many emojis you use.\n\nGil: Being face-to-face is so much better than texting. First, I hate typing on these little phone screens. And I can never really tell what my friends are thinking in texts. Communication is about much more than words. A lot can be lost in a text.\n\nCons\nJillian: I really do prefer communicating in person, but the truth is that everyone is busy. Outside school, it can be hard to make plans to get together in person. With a phone, I can stay connected all the time.\n\nMax: When I’m in trouble, it’s horrible to be there in person. My mum’s anger is much easier to handle when I’m reading it in a text message!`,
+
+        "WW5_U12L1": `Who does the chores at your house? Your mum? Your dad? You? Even if your parents have the house cleaned or the meals delivered by someone else, chances are there are still plenty of things you can do to help at home. But does that mean you deserve to be paid? That’s up for debate. Some parents give an allowance every week, even if children don’t do chores. Here are some arguments for and against a weekly allowance. \n\nFor\nReceiving an allowance helps children understand the value of money.\n• Children who have their own money become better at planning, spending and saving. These are skills that will help them as adults.\n• With their own money, children can make careful decisions about what to spend it on. As one expert says, ‘Children will never spend their own money the way they spend their parents’ money!’\n• Receiving an allowance for doing chores helps children recognise the importance of hard work. They’ll appreciate money more if they’ve worked for it than if it was just handed to them.\n\nAgainst\n• Adults don’t receive money for doing housework, so children shouldn’t either. They should simply do their share at home.\n• An allowance makes children feel like they’re helping parents out instead of taking responsibility for their lives. If they’re sleeping in the bed, they shouldn’t get paid for making it.\n• An allowance suggests that housework is something that children don’t need to do. If they don’t need money, they don’t have to do chores. If they do extra housework, they might try to bargain for more.\n• Studies show that children who receive an allowance when they don’t do any chores are less able to manage their money as adults. In the long run, an allowance only benefits a child who earns it.`,
+
+        "WW5_U12L3": `No Money? No Problem!\n\nLet’s face it—money isn’t always easy to come by, especially when you haven’t got a job and your parents don’t give you an allowance. And at the weekends, you might want to shop, eat at a restaurant or see a film. That all adds up! But no money doesn’t mean no fun! Here’s a list of some of our favourite ideas for ‘free time’! \n\nLook for free community events Go out to libraries and cafés, and look at the noticeboards there. You might see a sign for a free concert in the park or a poetry reading. Your library or community centre might offer free activities, such as language lessons or film nights. Bring your friends and try something new! \n\n• Play a sport Assuming you’ve got enough money to pay for a phone, use it to text your friends. Arrange to meet them at a local football field, and start playing. You’ll have fun—and get exercise— without taking a single coin from your pocket. \n\n• Go star-gazing No money for a film night? No problem! Nature puts on an even better show. Find a quiet space outdoors, spread a blanket on the ground and look up at the night sky. Use apps to help you find stars and constellations. Add music to make it more enjoyable. \n\n• Host a game night Find your favourite board games, and invite a friend (or two or three) over. Play tournaments of three games, and make your own prizes for the winner. \n\n• Make a film If you haven’t got money to go to a film, just make one! Write a script. (Hint: This is more fun if several friends are involved.) Find old clothes and household items to use as costumes and props. (Ask your mum and dad first, of course.) Practise, and then film it with a phone or tablet. When the film’s ready, host a viewing party! \n\n• Volunteer Get a group of friends together and volunteer. You’ll feel great and you’ll have a great time doing it. Look for opportunities in your community. Pick up litter, clean at an animal shelter or visit a home for the elderly. Helping out can make others happy, and what’s more fun than that?`
+    };
+</script>
+</body>
+</html>
