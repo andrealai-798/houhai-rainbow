@@ -384,11 +384,16 @@ async function generateRainbow() {
             styleExamples: localStorage.getItem('houhai_teacherStyle') || '',
             personal: document.getElementById('teacherPrompt').value,
         })});
-        if (!resp.ok) throw new Error(`服务器报错: ${resp.status}`);
-        const data = await resp.json();
+       const data = await resp.json().catch(() => ({}));
+
+if (!resp.ok) {
+    throw new Error(data.error || '生成错误');
+}
         document.getElementById('result-text').value = header + '\n\n' + data.result;
         switchTab('result');
-    } catch(err) { alert('❌ 生成失败：' + err.message); }
+   } catch (err) {
+    alert('❌ ' + (err.message || '生成错误'));
+}
     finally { btn.innerText = '✨ 一键生成专属反馈'; btn.disabled = false; }
 }
 
