@@ -210,7 +210,28 @@ ${errorPrompt || '无'}
 res.status(200).json({ result });
 
     } catch (error) {
-        console.error("生成出错:", error);
-        res.status(500).json({ error: error.message || '服务器内部错误' });
+    // 真实错误只记录在 Vercel 后台
+    console.error('生成出错（后台记录）:', {
+        status: error?.status,
+        message: error?.message,
+        stack: error?.stack
+    });
+
+    const status = Number(error?.status);
+
+    // 这些通常属于临时繁忙、超时或网络波动
+    const temporaryStatuses = [429, 500, 502, 503, 504];
+
+    if (temporaryStatuses.includes(status)) {
+        return res.status(503).json({
+            error: 'AI 服务暂时繁忙，系统已经自动重试 3 次，请稍后再试。'
+        });
     }
+
+    // 余额、API Key、模型参数等其他问题
+    // 前台不显示具体原因
+    return res.status(500).json({
+        error: '生成错误'
+    });
+}
 }
