@@ -1,3 +1,131 @@
+// 等待指定时间后继续
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * 调用 DeepSeek，并在服务器繁忙时自动重试。
+ *
+ * 最多请求 3 次：
+ * 第一次失败后等待 2 秒；
+ * 第二次失败后等待 5 秒；
+ * 第三次仍失败才返回错误。
+ */
+async function callDeepSeekWithRetry(requestBody) {
+    const MAX_ATTEMPTS = 3;
+
+    // 这些错误通常属于暂时性问题，可以自动重试
+    const RETRYABLE_STATUS = new Set([
+        429, // 请求过于频繁
+        500, // DeepSeek 内部错误
+        502, // 上游服务错误
+        503, // DeepSeek 服务器繁忙
+        504  // 请求超时
+    ]);
+
+    // 第一次失败等 2 秒，第二次失败等 5 秒
+    const RETRY_DELAYS = [0, 2000, 5000];
+
+    let lastError;
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        const controller = new AbortController();
+
+        // 单次请求超过 30 秒就主动停止，避免一直等到 Vercel 300 秒超时
+        const timeoutId = setTimeout(() => {
+            controller.abort();
+        }, 30000);
+
+        let response;
+        let rawText = '';
+        let attemptError;
+
+        try {
+            response = await fetch(
+                'https://api.deepseek.com/chat/completions',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+                    },
+                    body: JSON.stringify(requestBody),
+                    signal: controller.signal
+                }
+            );
+
+            // 先按普通文字读取，便于保留 DeepSeek 的错误信息
+            rawText = await response.text();
+
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                attemptError = new Error('DeepSeek 单次请求超过 30 秒');
+                attemptError.status = 504;
+            } else {
+                attemptError = new Error(
+                    `连接 DeepSeek 失败：${error.message}`
+                );
+                attemptError.status = 503;
+            }
+        } finally {
+            clearTimeout(timeoutId);
+        }
+
+        // 成功联系到 DeepSeek 后，检查它返回的状态
+        if (!attemptError && response) {
+            if (!response.ok) {
+                attemptError = new Error(
+                    `DeepSeek API 报错：${response.status} - ${rawText.slice(0, 800)}`
+                );
+                attemptError.status = response.status;
+
+            } else {
+                let data;
+
+                try {
+                    data = JSON.parse(rawText);
+                } catch (error) {
+                    attemptError = new Error('DeepSeek 返回的数据无法解析');
+                    attemptError.status = 502;
+                }
+
+                if (!attemptError) {
+                    const content =
+                        data?.choices?.[0]?.message?.content?.trim();
+
+                    if (content) {
+                        // 成功获得反馈，立即结束重试
+                        return content;
+                    }
+
+                    attemptError = new Error(
+                        'DeepSeek 没有返回有效的反馈文字'
+                    );
+                    attemptError.status = 502;
+                }
+            }
+        }
+
+        lastError = attemptError;
+
+        const status = Number(attemptError?.status);
+        const canRetry = RETRYABLE_STATUS.has(status);
+
+        // 400、401、402、422 等错误不适合盲目重试
+        if (!canRetry || attempt === MAX_ATTEMPTS) {
+            throw lastError;
+        }
+
+        const delay = RETRY_DELAYS[attempt];
+
+        console.warn(
+            `DeepSeek 第 ${attempt} 次请求失败，状态 ${status}，` +
+            `${delay / 1000} 秒后自动重试`
+        );
+
+        await sleep(delay);
+    }
+
+    throw lastError || new Error('DeepSeek 请求失败');
+}
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -75,37 +203,49 @@ ${errorPrompt || '无'}
 个性化观察/补充要求：${personal || '无'}${toneSection}${styleSection}
 ${blindBox}`;
 
-        const response = await fetch("https://api.deepseek.com/chat/completions", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: "deepseek-v4-flash",
-                thinking: {
-                    type: "disabled"
-                },
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user",   content: userPrompt }
-                ],
-                temperature: 0.9,
-                presence_penalty: 0.6,
-                frequency_penalty: 0.5
-            })
-        });
+const result = await callDeepSeekWithRetry({
+    model: "deepseek-v4-flash",
 
-        if (!response.ok) {
-            const errData = await response.text();
-            throw new Error(`DeepSeek API 报错: ${response.status} - ${errData}`);
-        }
+    thinking: {
+        type: "disabled"
+    },
 
-        const data = await response.json();
-        res.status(200).json({ result: data.choices[0].message.content.trim() });
+    messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+    ],
+
+    temperature: 0.9,
+    presence_penalty: 0.6,
+    frequency_penalty: 0.5,
+    max_tokens: 500
+});
+
+res.status(200).json({ result });
 
     } catch (error) {
-        console.error("生成出错:", error);
-        res.status(500).json({ error: error.message || '服务器内部错误' });
+    // 真实错误只记录在 Vercel 后台
+    console.error('生成出错（后台记录）:', {
+        status: error?.status,
+        message: error?.message,
+        stack: error?.stack
+    });
+
+    const status = Number(error?.status);
+
+    // 这些通常属于临时繁忙、超时或网络波动
+    const temporaryStatuses = [429, 500, 502, 503, 504];
+
+    if (temporaryStatuses.includes(status)) {
+        return res.status(503).json({
+            error: 'AI 服务暂时繁忙，系统已经自动重试 3 次，请稍后再试。'
+        });
     }
+
+    // 余额、API Key、模型参数等其他问题
+    // 前台不显示具体原因
+    return res.status(500).json({
+        error: '生成错误'
+    });
+}
 }
