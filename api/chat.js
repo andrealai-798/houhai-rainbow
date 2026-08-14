@@ -239,7 +239,26 @@ const lockedPhraseText = phraseItems.length
 练习建议之后，只保留1-2句简短、自然的鼓励或期待作为结尾。不要再次总结前面的表现，不要重复知识点或练习建议，也不要连续写多句内容很接近的鼓励。
 结尾可以活泼、有亲和力，但要简洁收住。
 `;
+        const wordReference = wordItems.length
+    ? wordItems.map(i => {
+        const text = String(i.text || '').trim();
+        const reason = String(i.reason || '').trim();
 
+        return reason
+            ? `- ${text}｜老师标注：${reason}`
+            : `- ${text}｜老师只要求注意发音`;
+    }).join('\n')
+    : '无';
+
+const phraseReference = phraseItems.length
+    ? phraseItems.map(i => {
+        const text = String(i.text || '').trim();
+        const reason = String(i.reason || '').trim();
+
+        return `- ${text}｜老师标注：${reason}`;
+    }).join('\n')
+    : '无';
+        
         // 构建语气参考段落
         const toneSection = toneExamples
             ? `\n【语气参考（请模仿以下风格，但不要直接照抄）】：\n${toneExamples}`
@@ -251,7 +270,15 @@ const lockedPhraseText = phraseItems.length
 作业等级：${level || '未知'}
 表现亮点：${praises || '无'}
 建议指导：${advices || '无'}
-错误标注（分类）：
+老师知识点参考（仅用于理解老师指出的问题，不得自行增加、猜测或改写新的问题）：
+
+【单词参考】
+${wordReference}
+
+【短语/句子参考】
+${phraseReference}
+
+最终反馈中需要使用的锁定内容：
 单词发音问题：${lockedWordText ? '[[WORD_ERRORS]]' : '无'}
 短语/句子问题：${lockedPhraseText ? '[[PHRASE_ERRORS]]' : '无'}
 个性化观察/补充要求：${personal || '无'}${toneSection}`;
