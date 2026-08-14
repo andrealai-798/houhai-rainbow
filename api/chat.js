@@ -144,8 +144,6 @@ module.exports = async function handler(req, res) {
     personal
     } = req.body;
         
-    console.log('收到的 errorItems：', JSON.stringify(errorItems));
-        
         const wordItems = Array.isArray(errorItems?.word)
     ? errorItems.word
     : [];
