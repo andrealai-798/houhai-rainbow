@@ -153,22 +153,26 @@
         <div id="wordErrors"></div>
         <div class="error-empty" id="wordEmpty">暂无——单击右侧课文中的单词即可添加</div>
       </div>
-      <div class="error-section-header">
-    <span class="badge badge-phrase">短语 / 句子</span>
-    漏读 / 语法 / 其他
+      <div class="error-section">
+    <div class="error-section-header">
+        <span class="badge badge-phrase">短语 / 句子</span>
+        漏读 / 语法 / 其他
 
-    <span style="font-size:11px;color:#aaa;font-weight:400;">
-        原因必填——默认原样保留；需要AI结合原句扩写时，可开启「AI扩写」
-    </span>
+        <span style="font-size:11px;color:#aaa;font-weight:400;">
+            原因必填——默认原样保留；需要AI结合原句扩写时，可开启「AI扩写」
+        </span>
 
-    <label class="ai-expand-option" style="margin-left:auto;">
-        <input type="checkbox" id="phraseAiExpand">
-        AI扩写
-    </label>
+        <label class="ai-expand-option" style="margin-left:auto;">
+            <input type="checkbox" id="phraseAiExpand">
+            AI扩写
+        </label>
+    </div>
+
+    <div id="phraseErrors"></div>
+    <div class="error-empty" id="phraseEmpty">
+        暂无——在右侧课文中划选多个词即可添加
+    </div>
 </div>
-        <div id="phraseErrors"></div>
-        <div class="error-empty" id="phraseEmpty">暂无——在右侧课文中划选多个词即可添加</div>
-      </div>
     </div>
 
     <div class="section" style="border:none;padding-bottom:0;">
@@ -228,11 +232,10 @@ function addError(text, groupId, spans) {
     });
 
     errorItems[type].push({
-        text,
-        reason: '',
-        groupId,
-        ...(type === 'phrase' ? { aiExpand: false } : {})
-    });
+    text,
+    reason: '',
+    groupId
+});
 
     renderErrors(type);
 }
