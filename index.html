@@ -356,7 +356,18 @@ async function generateRainbow() {
             name, progress: `U${unit}L${lesson}`, taskType, level,
             praises:  Array.from(document.querySelectorAll('input[name="praise"]:checked')).map(el=>el.value).join('，'),
             advices:  Array.from(document.querySelectorAll('input[name="advice"]:checked')).map(el=>el.value).join('，'),
-            errorPrompt: buildErrorPrompt(), toneExamples,
+            errorPrompt: buildErrorPrompt(), 
+            errorItems: {
+    word: errorItems.word.map(i => ({
+        text: i.text,
+        reason: i.reason
+    })),
+    phrase: errorItems.phrase.map(i => ({
+        text: i.text,
+        reason: i.reason
+    }))
+},
+            toneExamples,
             personal: document.getElementById('teacherPrompt').value,
         })});
         const data = await resp.json().catch(() => ({}));
