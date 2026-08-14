@@ -152,6 +152,9 @@ const phraseItems = Array.isArray(errorItems?.phrase)
     ? errorItems.phrase
     : [];
 
+    // 短语 / 句子分成两类：默认原样保留；勾选后交给 AI 扩写
+const lockedPhraseItems = phraseItems.filter(i => !i.aiExpand);
+const expandPhraseItems = phraseItems.filter(i => i.aiExpand);
 
 // 单词问题：老师填写的原因原样保留
 const lockedWordText = wordItems.length
@@ -168,16 +171,26 @@ const lockedWordText = wordItems.length
     }).join('、')
     : '';
 
-
-// 短语 / 句子问题：老师填写的原因原样保留
-const lockedPhraseText = phraseItems.length
-    ? phraseItems.map(i => {
+// 未勾选 AI扩写的短语 / 句子：老师填写的内容原样保留
+const lockedPhraseText = lockedPhraseItems.length
+    ? lockedPhraseItems.map(i => {
         const text = String(i.text || '').trim();
         const reason = String(i.reason || '').trim();
 
         return `【${text}】${reason}`;
     }).join('、')
     : '';
+
+// 勾选 AI扩写的短语 / 句子：把原句和老师指定知识点交给 AI
+const expandPhraseText = expandPhraseItems.length
+    ? expandPhraseItems.map((i, index) => {
+        const text = String(i.text || '').trim();
+        const reason = String(i.reason || '').trim();
+
+        return `${index + 1}. 原句：【${text}】
+老师指定知识点：${reason}`;
+    }).join('\n')
+    : '无';
 
         const systemPrompt = `你是一位资深、专业且极具亲和力的少儿英语教培机构"指导老师"。
 请根据以下信息生成一段用于微信发送的"彩虹反馈段落"。
@@ -190,14 +203,13 @@ const lockedPhraseText = phraseItems.length
 5. 正文以1-2段为主，不要分成很多小段。
 
 【知识点使用规则】：
-- [[WORD_ERRORS]] 代表老师已经写好的具体单词发音问题。
-- [[PHRASE_ERRORS]] 代表老师已经写好的具体短语、句子、语法或结构问题。
-- 占位符中的内容已经是完整、准确的知识点，不需要你再次解释。
-你的任务只是根据上下文自然地引出和承接这些知识点：
-- 单词问题自然放在发音反馈中；
-- 短语、句子、语法问题自然放在结构、漏读或表达等相应反馈中。
-每个占位符只使用一次。占位符出现后，不要再次复述、解释、扩展、举例或换一种说法重复其中的知识点，也不要根据内容自行推断新的问题。
-可以自由变化知识点前后的连接语，让整段听起来像真实老师自然写出的反馈，但不要改动或重复具体知识点。
+- [[WORD_ERRORS]] 代表老师已经确认好的具体单词发音问题。
+- [[PHRASE_ERRORS]] 代表老师要求原样保留的短语、句子、语法或结构问题。
+- 两个程序占位符中的内容都已经准确，不需要再次解释。只需要根据上下文自然引出和承接，每个占位符只使用一次，不要改写、扩展、重复或自行推断新的问题。
+- 如果用户信息中出现“需要AI结合原句扩写的短语/句子”，则这些项目需要你结合“原句”和“老师指定知识点”进行自然、简洁的讲解。
+- AI扩写只能围绕老师明确指定的知识点展开，不得增加老师没有指出的其他问题。
+- 例如老师只指定某个时态、语法结构、介词或从句，就只解释这一点；不要自行添加发音、停顿、连读、语调、流畅度、漏读或其他语法问题。
+- AI扩写时保留老师提供的原句或短语，用【】标注，并将老师的简短提示自然扩写成适合家长阅读的反馈。
 
 【知识点与后续文字的衔接】：
 [[WORD_ERRORS]] 和 [[PHRASE_ERRORS]] 所代表的老师知识点是不可拆分的完整信息片段。
@@ -254,7 +266,13 @@ const lockedPhraseText = phraseItems.length
 表现亮点：${praises || '无'}
 建议指导：${advices || '无'}
 单词发音问题：${lockedWordText ? '[[WORD_ERRORS]]' : '无'}
-短语/句子问题：${lockedPhraseText ? '[[PHRASE_ERRORS]]' : '无'}
+
+需要原样保留的短语/句子问题：
+${lockedPhraseText ? '[[PHRASE_ERRORS]]' : '无'}
+
+需要AI结合原句扩写的短语/句子：
+${expandPhraseText}
+
 个性化观察/补充要求：${personal || '无'}${toneSection}`;
 
     let result = await callDeepSeekWithRetry({
