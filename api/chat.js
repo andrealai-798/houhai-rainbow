@@ -190,12 +190,14 @@ const lockedPhraseText = phraseItems.length
 5. 正文以1-2段为主，不要分成很多小段。
 
 【知识点使用规则】：
-- [[WORD_ERRORS]] 代表老师标注的单词发音问题。
-- [[PHRASE_ERRORS]] 代表老师标注的短语、句子、语法或其他结构问题。
-请把存在的知识点自然融入反馈：
-单词问题归入发音方面；短语、句子、语法问题根据老师给出的内容，自然归入语法结构、漏读或表达等相应方面。
-你可以自由添加自然的连接语和反馈语言，但不要重复解释同一个知识点。
-不要机械使用“单词问题”“短语问题”等标签，也不要套固定句型。
+- [[WORD_ERRORS]] 代表老师已经写好的具体单词发音问题。
+- [[PHRASE_ERRORS]] 代表老师已经写好的具体短语、句子、语法或结构问题。
+- 占位符中的内容已经是完整、准确的知识点，不需要你再次解释。
+你的任务只是根据上下文自然地引出和承接这些知识点：
+- 单词问题自然放在发音反馈中；
+- 短语、句子、语法问题自然放在结构、漏读或表达等相应反馈中。
+每个占位符只使用一次。占位符出现后，不要再次复述、解释、扩展、举例或换一种说法重复其中的知识点，也不要根据内容自行推断新的问题。
+可以自由变化知识点前后的连接语，让整段听起来像真实老师自然写出的反馈，但不要改动或重复具体知识点。
 
 【知识点与后续文字的衔接】：
 [[WORD_ERRORS]] 和 [[PHRASE_ERRORS]] 所代表的老师知识点是不可拆分的完整信息片段。
@@ -239,25 +241,6 @@ const lockedPhraseText = phraseItems.length
 练习建议之后，只保留1-2句简短、自然的鼓励或期待作为结尾。不要再次总结前面的表现，不要重复知识点或练习建议，也不要连续写多句内容很接近的鼓励。
 结尾可以活泼、有亲和力，但要简洁收住。
 `;
-        const wordReference = wordItems.length
-    ? wordItems.map(i => {
-        const text = String(i.text || '').trim();
-        const reason = String(i.reason || '').trim();
-
-        return reason
-            ? `- ${text}｜老师标注：${reason}`
-            : `- ${text}｜老师只要求注意发音`;
-    }).join('\n')
-    : '无';
-
-const phraseReference = phraseItems.length
-    ? phraseItems.map(i => {
-        const text = String(i.text || '').trim();
-        const reason = String(i.reason || '').trim();
-
-        return `- ${text}｜老师标注：${reason}`;
-    }).join('\n')
-    : '无';
         
         // 构建语气参考段落
         const toneSection = toneExamples
@@ -270,15 +253,6 @@ const phraseReference = phraseItems.length
 作业等级：${level || '未知'}
 表现亮点：${praises || '无'}
 建议指导：${advices || '无'}
-老师知识点参考（仅用于理解老师指出的问题，不得自行增加、猜测或改写新的问题）：
-
-【单词参考】
-${wordReference}
-
-【短语/句子参考】
-${phraseReference}
-
-最终反馈中需要使用的锁定内容：
 单词发音问题：${lockedWordText ? '[[WORD_ERRORS]]' : '无'}
 短语/句子问题：${lockedPhraseText ? '[[PHRASE_ERRORS]]' : '无'}
 个性化观察/补充要求：${personal || '无'}${toneSection}`;
