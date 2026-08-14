@@ -140,9 +140,10 @@ module.exports = async function handler(req, res) {
     name, progress, taskType, level,
     praises, advices,
     errorItems,
+    phraseAiExpand,
     toneExamples,
     personal
-    } = req.body;
+} = req.body;
         
         const wordItems = Array.isArray(errorItems?.word)
     ? errorItems.word
@@ -169,22 +170,22 @@ const lockedWordText = wordItems.length
     }).join('、')
     : '';
 
-// 短语 / 句子问题：全部交给 AI 组织语言，但根据是否勾选 AI扩写限制权限
+// 根据总开关决定所有短语 / 句子的处理方式
+const phraseInstruction = phraseAiExpand
+    ? 'AI扩写：结合原句，把老师指出的错误点解释成自然、简洁的纠正性反馈；可以补充与这个知识点直接相关的解释，但不得增加其他问题。'
+    : '自然整理：必须保留老师原始说明中的全部信息和原意，只允许做必要的连接、语序和标点调整，使其成为自然完整的反馈句；不得补充、扩展或推断新的知识。';
+
 const phrasePromptText = phraseItems.length
     ? phraseItems.map((i, index) => {
         const text = String(i.text || '').trim();
         const reason = String(i.reason || '').trim();
 
-        const instruction = i.aiExpand
-            ? 'AI扩写：结合原句，把老师指出的错误点解释成自然、简洁的纠正性反馈；只能解释这个错误点，不得增加其他问题。'
-            : '原样保留：必须保留老师原始说明中的全部信息和原意，只允许做必要的连接、语序和标点调整，使其成为自然完整的反馈句；不得补充、扩展或推断新的知识。';
-
         return `${index + 1}. 原句：【${text}】
 老师指出的错误点：${reason}
-处理方式：${instruction}`;
+处理方式：${phraseInstruction}`;
     }).join('\n\n')
     : '无';
-
+        
         const systemPrompt = `你是一位资深、专业且极具亲和力的少儿英语教培机构"指导老师"。
 请根据以下信息生成一段用于微信发送的"彩虹反馈段落"。
 
@@ -200,7 +201,7 @@ const phrasePromptText = phraseItems.length
 2. 开头的肯定和夸奖只能依据“表现亮点”和整体完成情况生成，不能从错误标注内容中自行提取优点。
 3. [[WORD_ERRORS]] 代表老师已经确认好的具体单词发音问题。自然放入发音反馈中，只使用一次，不要修改、解释或扩展其中的知识点。
 4. 每个短语/句子错误点都包含“原句”“老师指出的错误点”和“处理方式”，必须严格按照对应的处理方式完成反馈。
-5. 标记为“原样保留”的项目：
+5. 标记为“自然整理”的项目：
 必须保留老师原始说明中的全部信息和原意，只允许增加必要的连接词、调整语序和标点，使内容成为自然、完整的反馈句。不得删除信息，不得补充解释、举例或推断新的知识。
 6. 标记为“AI扩写”的项目：
 可以结合原句，对老师明确指出的错误点进行自然、简洁的解释，但只能围绕这个错误点展开，不得增加老师没有指出的其他问题。
