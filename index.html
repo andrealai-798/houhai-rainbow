@@ -213,11 +213,22 @@ function autoClassify(text) { return text.trim().includes(' ') ? 'phrase' : 'wor
 function addError(text, groupId, spans) {
     const type = autoClassify(text);
     const cls  = type === 'word' ? 'active-word' : 'active-phrase';
-    spans.forEach(s => { s.classList.add(cls); s.dataset.groupId = groupId; s.dataset.groupType = type; });
-    errorItems[type].push({ text, reason: '', groupId });
+
+    spans.forEach(s => {
+        s.classList.add(cls);
+        s.dataset.groupId = groupId;
+        s.dataset.groupType = type;
+    });
+
+    errorItems[type].push({
+        text,
+        reason: '',
+        groupId,
+        ...(type === 'phrase' ? { aiExpand: false } : {})
+    });
+
     renderErrors(type);
 }
-
 function removeError(type, groupId) {
     document.querySelectorAll(`[data-group-id="${groupId}"]`).forEach(s => {
         s.classList.remove('active-word','active-phrase');
@@ -235,21 +246,64 @@ function updateReason(type, groupId, val) {
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function renderErrors(type) {
+
     const container = document.getElementById(type + 'Errors');
     const emptyEl   = document.getElementById(type + 'Empty');
     const items     = errorItems[type];
-    if (!items.length) { container.innerHTML = ''; emptyEl.style.display = 'block'; return; }
+
+    if (!items.length) {
+        container.innerHTML = '';
+        emptyEl.style.display = 'block';
+        return;
+    }
+
     emptyEl.style.display = 'none';
+
     const isRequired = type === 'phrase';
-    const ph = type === 'word' ? '选填：具体原因（如 i 读成了 e）' : '必填：错误原因（如 漏读 not / 时态错误）';
+
+    const ph = type === 'word'
+        ? '选填：具体原因（如 i 读成了 e）'
+        : '必填：错误原因（如 漏读 not / 时态错误）';
+
     container.innerHTML = items.map(item => `
         <div class="error-item">
+
             <div class="content-tag">${escHtml(item.text)}</div>
-            <input class="reason-input${isRequired ? ' required-field' : ''}"
-                placeholder="${ph}" value="${escHtml(item.reason)}"
-                oninput="updateReason('${type}','${item.groupId}',this.value)">
-            <button class="remove-btn" onclick="removeError('${type}','${item.groupId}')">✕</button>
-        </div>`).join('');
+
+            <input
+                class="reason-input${isRequired ? ' required-field' : ''}"
+                placeholder="${ph}"
+                value="${escHtml(item.reason)}"
+                oninput="updateReason('${type}','${item.groupId}',this.value)"
+            >
+
+            ${type === 'phrase' ? `
+                <label class="ai-expand-option">
+                    <input
+                        type="checkbox"
+                        ${item.aiExpand ? 'checked' : ''}
+                        onchange="updateAiExpand('${item.groupId}', this.checked)"
+                    >
+                    AI扩写
+                </label>
+            ` : ''}
+
+            <button
+                class="remove-btn"
+                onclick="removeError('${type}','${item.groupId}')"
+            >
+                ✕
+            </button>
+
+        </div>
+    `).join('');
+}
+    function updateAiExpand(groupId, checked) {
+    const item = errorItems.phrase.find(i => i.groupId === groupId);
+
+    if (item) {
+        item.aiExpand = checked;
+    }
 }
 
 function wrapWords(text) {
@@ -364,7 +418,8 @@ async function generateRainbow() {
     })),
     phrase: errorItems.phrase.map(i => ({
         text: i.text,
-        reason: i.reason
+        reason: i.reason,
+        aiExpand: !!i.aiExpand
     }))
 },
             toneExamples,
