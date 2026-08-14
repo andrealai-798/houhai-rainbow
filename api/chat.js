@@ -159,9 +159,12 @@ const lockedWordText = wordItems.length
         const text = String(i.text || '').trim();
         const reason = String(i.reason || '').trim();
 
-        return reason
-            ? `【${text}】${reason}`
-            : `【${text}】的发音`;
+        const isPartialLetters =
+    /^(?=.*-)[A-Za-z-]+$/.test(reason);
+
+return reason
+    ? `【${text}】${isPartialLetters ? '的' : ''}${reason}`
+    : `【${text}】的发音`;
     }).join('、')
     : '';
 
