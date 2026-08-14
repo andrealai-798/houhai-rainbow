@@ -137,13 +137,12 @@ module.exports = async function handler(req, res) {
 
     try {
         const {
-            name, progress, taskType, level,
-            praises, advices,
-            errorPrompt,   // 新：分类错误信息（单词/短语/句子）
-            toneExamples,  // 新：语气参考例子
-            errorPrompt,
-            personal
-        } = req.body;
+    name, progress, taskType, level,
+    praises, advices,
+    errorItems,
+    toneExamples,
+    personal
+    } = req.body;
         const wordItems = Array.isArray(errorItems?.word)
     ? errorItems.word
     : [];
