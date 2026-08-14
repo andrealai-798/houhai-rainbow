@@ -153,8 +153,6 @@ const phraseItems = Array.isArray(errorItems?.phrase)
     : [];
 
     // 短语 / 句子分成两类：默认原样保留；勾选后交给 AI 扩写
-const lockedPhraseItems = phraseItems.filter(i => !i.aiExpand);
-const expandPhraseItems = phraseItems.filter(i => i.aiExpand);
 
 // 单词问题：老师填写的原因原样保留
 const lockedWordText = wordItems.length
@@ -171,25 +169,20 @@ const lockedWordText = wordItems.length
     }).join('、')
     : '';
 
-// 未勾选 AI扩写的短语 / 句子：老师填写的内容原样保留
-const lockedPhraseText = lockedPhraseItems.length
-    ? lockedPhraseItems.map(i => {
+// 短语 / 句子问题：全部交给 AI 组织语言，但根据是否勾选 AI扩写限制权限
+const phrasePromptText = phraseItems.length
+    ? phraseItems.map((i, index) => {
         const text = String(i.text || '').trim();
         const reason = String(i.reason || '').trim();
 
-        return `【${text}】${reason}`;
-    }).join('、')
-    : '';
-
-// 勾选 AI扩写的短语 / 句子：把原句和老师指定知识点交给 AI
-const expandPhraseText = expandPhraseItems.length
-    ? expandPhraseItems.map((i, index) => {
-        const text = String(i.text || '').trim();
-        const reason = String(i.reason || '').trim();
+        const instruction = i.aiExpand
+            ? 'AI扩写：结合原句，把老师指出的错误点解释成自然、简洁的纠正性反馈；只能解释这个错误点，不得增加其他问题。'
+            : '原样保留：必须保留老师原始说明中的全部信息和原意，只允许做必要的连接、语序和标点调整，使其成为自然完整的反馈句；不得补充、扩展或推断新的知识。';
 
         return `${index + 1}. 原句：【${text}】
-老师指定知识点：${reason}`;
-    }).join('\n')
+老师指出的错误点：${reason}
+处理方式：${instruction}`;
+    }).join('\n\n')
     : '无';
 
         const systemPrompt = `你是一位资深、专业且极具亲和力的少儿英语教培机构"指导老师"。
@@ -199,22 +192,24 @@ const expandPhraseText = expandPhraseItems.length
 1. 回复直接以学生英文名切入，不要输出“家长您好”“请查收”“以下是反馈”等开头。
 2. 反馈尽量控制在150字以内；如果知识点较多，优先保证知识点和练习建议完整。
 3. 老师提供的具体单词、短语、句子使用中文全角方括号【】标注。
-4.  [[WORD_ERRORS]] 和 [[PHRASE_ERRORS]] 是程序专用占位符，不属于反馈文字。必须逐字符原样保留，不能改成【WORD_ERRORS】、【PHRASE_ERRORS】或任何其他形式，也不能在占位符外额外添加【】、引号或括号。
+4. [[WORD_ERRORS]] 是程序专用占位符，不属于反馈文字。必须逐字符原样保留，不能改成【WORD_ERRORS】或任何其他形式，也不能在占位符外额外添加【】、引号或括号。
 5. 正文以1-2段为主，不要分成很多小段。
 
 【知识点使用规则】：
-- [[WORD_ERRORS]] 代表老师已经确认好的具体单词发音问题。
-- [[PHRASE_ERRORS]] 代表老师要求原样保留的短语、句子、语法或结构问题。
-- 两个程序占位符中的内容都已经准确，不需要再次解释。只需要根据上下文自然引出和承接，每个占位符只使用一次，不要改写、扩展、重复或自行推断新的问题。
-- 如果用户信息中出现“需要AI结合原句扩写的短语/句子”，则这些项目需要你结合“原句”和“老师指定知识点”进行自然、简洁的讲解。
-- AI扩写只能围绕老师明确指定的知识点展开，不得增加老师没有指出的其他问题。
-- 例如老师只指定某个时态、语法结构、介词或从句，就只解释这一点；不要自行添加发音、停顿、连读、语调、流畅度、漏读或其他语法问题。
-- AI扩写时保留老师提供的原句或短语，用【】标注，并将老师的简短提示自然扩写成适合家长阅读的反馈。
+1. “单词发音问题”和“短语/句子错误点”中的所有内容，都是老师已经确认需要纠正或提醒的问题，绝对不能描述为优点、亮点、掌握得好、使用准确或“用得很到位”等正面表现。
+2. 开头的肯定和夸奖只能依据“表现亮点”和整体完成情况生成，不能从错误标注内容中自行提取优点。
+3. [[WORD_ERRORS]] 代表老师已经确认好的具体单词发音问题。自然放入发音反馈中，只使用一次，不要修改、解释或扩展其中的知识点。
+4. 每个短语/句子错误点都包含“原句”“老师指出的错误点”和“处理方式”，必须严格按照对应的处理方式完成反馈。
+5. 标记为“原样保留”的项目：
+必须保留老师原始说明中的全部信息和原意，只允许增加必要的连接词、调整语序和标点，使内容成为自然、完整的反馈句。不得删除信息，不得补充解释、举例或推断新的知识。
+6. 标记为“AI扩写”的项目：
+可以结合原句，对老师明确指出的错误点进行自然、简洁的解释，但只能围绕这个错误点展开，不得增加老师没有指出的其他问题。
+7. 如果老师提供的错误点比较简短，例如“which 定语从句”“should+被动结构”“介词 around”，不要自行猜测学生具体错在什么地方，只能针对老师明确指出的知识点进行提醒或解释。
+8. 无论是否AI扩写，都不能自行增加发音、停顿、连读、语调、流畅度、漏读或其他语法问题，除非老师已经明确指出。
 
 【知识点与后续文字的衔接】：
-[[WORD_ERRORS]] 和 [[PHRASE_ERRORS]] 所代表的老师知识点是不可拆分的完整信息片段。
-知识点与后续解释、另一类问题或练习建议之间必须使用合适的中文标点自然衔接，绝不能把老师知识点的最后一个字与后面的文字直接连在一起。
-同一类多个知识点可以使用顿号、逗号或分号自然连接；从一类问题转入另一类问题，或从具体问题转入练习建议时，要使用清楚、完整的标点进行分隔。
+[[WORD_ERRORS]] 所代表的老师知识点是不可拆分的完整信息片段。转入短语/句子问题、另一类问题或练习建议时，要使用合适的中文标点自然衔接，不能把前后内容直接连在一起。
+短语/句子错误点之间，以及具体问题与练习建议之间，也要使用清楚、完整的中文标点自然分隔。
 
 【反馈顺序】：
 先肯定本次整体表现和亮点，再自然反馈发音问题及短语/句子/语法问题。
@@ -267,11 +262,8 @@ const expandPhraseText = expandPhraseItems.length
 建议指导：${advices || '无'}
 单词发音问题：${lockedWordText ? '[[WORD_ERRORS]]' : '无'}
 
-需要原样保留的短语/句子问题：
-${lockedPhraseText ? '[[PHRASE_ERRORS]]' : '无'}
-
-需要AI结合原句扩写的短语/句子：
-${expandPhraseText}
+短语/句子错误点：
+${phrasePromptText}
 
 个性化观察/补充要求：${personal || '无'}${toneSection}`;
 
@@ -293,8 +285,7 @@ ${expandPhraseText}
 
 // 防止 AI 给占位符额外套上【】
 result = result
-    .replaceAll('【[[WORD_ERRORS]]】', '[[WORD_ERRORS]]')
-    .replaceAll('【[[PHRASE_ERRORS]]】', '[[PHRASE_ERRORS]]');
+    .replaceAll('【[[WORD_ERRORS]]】', '[[WORD_ERRORS]]');
 // 插入老师原始填写的单词问题
 if (lockedWordText) {
     if (result.includes('[[WORD_ERRORS]]')) {
@@ -309,25 +300,6 @@ if (lockedWordText) {
 } else {
     result = result.replaceAll('[[WORD_ERRORS]]', '');
 }
-
-
-// 插入老师原始填写的短语 / 句子问题
-if (lockedPhraseText) {
-    if (result.includes('[[PHRASE_ERRORS]]')) {
-        result = result.replace(
-            '[[PHRASE_ERRORS]]',
-            lockedPhraseText
-        );
-
-        result = result.replaceAll('[[PHRASE_ERRORS]]', '');
-    } else {
-        // AI 万一忘了占位符，仍然保证老师内容不会丢
-        result += `\n${lockedPhraseText}`;
-    }
-} else {
-    result = result.replaceAll('[[PHRASE_ERRORS]]', '');
-}
-
 
 res.status(200).json({ result });
 
