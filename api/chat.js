@@ -155,18 +155,18 @@ const phraseItems = Array.isArray(errorItems?.phrase)
 
 // 单词问题：老师填写的原因原样保留
 const lockedWordText = wordItems.length
-    ? '注意：' + wordItems.map(i => {
+    ? wordItems.map(i => {
         const text = String(i.text || '').trim();
         const reason = String(i.reason || '').trim();
 
         const isPartialLetters =
-    /^(?=.*-)[A-Za-z-]+$/.test(reason);
+            /^(?=.*-)[A-Za-z-]+$/.test(reason);
 
-return reason
-    ? `【${text}】${isPartialLetters ? '的' : ''}${reason}`
-    : `【${text}】的发音`;
-    }).join('、') + '。'
-: '';
+        return reason
+            ? `【${text}】${isPartialLetters ? '的' : ''}${reason}`
+            : `【${text}】`;
+    }).join('、')
+    : '';
 
 
 // 短语 / 句子问题：老师填写的原因原样保留
@@ -176,7 +176,7 @@ const lockedPhraseText = phraseItems.length
         const reason = String(i.reason || '').trim();
 
         return `【${text}】${reason}`;
-    }).join('；')
+    }).join('、')
     : '';
 
         const systemPrompt = `你是一位资深、专业且极具亲和力的少儿英语教培机构"指导老师"。
@@ -196,25 +196,14 @@ const lockedPhraseText = phraseItems.length
 9. 不要使用比喻句，比如像珍珠或者小溪
 10. 不要再评价学生的发音像珍珠了，使用更多变的评价。
 
-【锁定知识点规则——最高优先级】：
-老师填写的具体错误内容将由程序在生成结束后自动插入，你绝对不要自行改写、概括或重新解释这些内容。
-如果存在单词问题，请把下面这个标记作为一条完整、独立的反馈内容直接放在自然的位置：
-[[WORD_ERRORS]]
-[[WORD_ERRORS]] 会被程序自动替换成完整的一句话，因此：
-- 标记前不要再加“注意”“注意发音”“发音上注意”“发音方面”等文字。
-- 标记后不要再加“的发音”“需要注意”等文字。
-- 不要给标记补充冒号、顿号或其他说明。
-- 不要在其他位置重复描述具体的单词错误。
-正确示例：
-[[WORD_ERRORS]]
-错误示例：
-注意[[WORD_ERRORS]]
-注意：[[WORD_ERRORS]]
-[[WORD_ERRORS]]的发音
-发音上注意[[WORD_ERRORS]]
-如果存在短语/句子问题，也请把下面的标记作为独立反馈内容使用：
-[[PHRASE_ERRORS]]
-不要改写标记内部内容，也不要在标记前后添加会改变老师原意的说明。
+【老师知识点使用规则——最高优先级】：
+老师填写的具体知识点由程序通过 [[WORD_ERRORS]] 和 [[PHRASE_ERRORS]] 插入。
+- [[WORD_ERRORS]] 代表老师标注的单词发音问题。
+- [[PHRASE_ERRORS]] 代表老师标注的短语、句子、语法或其他问题。
+请根据两类知识点的性质，自然地组织反馈：
+单词问题归入发音方面；短语/句子问题根据老师给出的原因，自然归入语法结构、漏读、表达等相应方面。
+不要机械罗列“单词问题”“短语问题”等标签，也不规定固定句型。可以根据上下文自由使用“注意、再留意、可以再巩固、这里再练一练”等自然连接方式，使整段读起来像真实老师写给家长的反馈。
+但必须完整使用所有占位符，不能遗漏、改写、概括或自行解释占位符所代表的老师原始知识点。不要重复反馈同一个知识点。
 
 【错误反馈规则——极其重要，必须严格遵守】：
 - 单词发音问题：多个单词时合并成一句，格式为「注意【单词1】、【单词2】、【单词3】的发音」，不要每个单词单独一句。如果某个单词有原因，在该单词后用括号补充，如「注意【fantastic】（i读成了e）、【hotel】的发音」。只有一个单词时正常写「注意【xxx】的发音」。绝对不要自己猜测或编造原因。
@@ -244,8 +233,8 @@ const lockedPhraseText = phraseItems.length
 表现亮点：${praises || '无'}
 建议指导：${advices || '无'}
 错误标注（分类）：
-单词发音问题：${lockedWordText ? '有，请单独原样放置 [[WORD_ERRORS]]，标记前后不要添加任何描述' : '无'}
-短语/句子问题：${lockedPhraseText ? '有，请单独原样放置 [[PHRASE_ERRORS]]，标记前后不要添加任何描述' : '无'}
+单词发音问题：${lockedWordText ? '[[WORD_ERRORS]]' : '无'}
+短语/句子问题：${lockedPhraseText ? '[[PHRASE_ERRORS]]' : '无'}
 个性化观察/补充要求：${personal || '无'}${toneSection}`;
 
     let result = await callDeepSeekWithRetry({
