@@ -141,8 +141,40 @@ export default async function handler(req, res) {
             praises, advices,
             errorPrompt,   // 新：分类错误信息（单词/短语/句子）
             toneExamples,  // 新：语气参考例子
+            errorPrompt,
             personal
         } = req.body;
+        const wordItems = Array.isArray(errorItems?.word)
+    ? errorItems.word
+    : [];
+
+const phraseItems = Array.isArray(errorItems?.phrase)
+    ? errorItems.phrase
+    : [];
+
+
+// 单词问题：老师填写的原因原样保留
+const lockedWordText = wordItems.length
+    ? '注意：' + wordItems.map(i => {
+        const text = String(i.text || '').trim();
+        const reason = String(i.reason || '').trim();
+
+        return reason
+            ? `【${text}】${reason}`
+            : `【${text}】的发音`;
+    }).join('、')
+    : '';
+
+
+// 短语 / 句子问题：老师填写的原因原样保留
+const lockedPhraseText = phraseItems.length
+    ? phraseItems.map(i => {
+        const text = String(i.text || '').trim();
+        const reason = String(i.reason || '').trim();
+
+        return `【${text}】${reason}`;
+    }).join('；')
+    : '';
 
         const systemPrompt = `你是一位资深、专业且极具亲和力的少儿英语教培机构"指导老师"。
 请根据以下信息生成一段用于微信发送的"彩虹反馈段落"。
@@ -153,11 +185,23 @@ export default async function handler(req, res) {
 3. 所有标注的单词、短语、句子片段必须使用中文全角方括号【】标注。
 4. 在星星系统下面的文字部分最好是两段话，不用分太多段。
 5. 保证相邻的反馈都不要出现重复的话术。
-6. 星星系统后的文字内容整体在150字以内。
+6. 星星系统后的文字整体尽量控制在150字以内。
+如果老师锁定的知识点较多，必须优先完整保留老师输入内容，
+不能为了控制字数删减或改写知识点。
 7. 要注意相邻的反馈内容不要很接近。
 8. 在文字内容中不要出现✨✨✨✨✨
 9. 不要使用比喻句，比如像珍珠或者小溪
 10. 不要再评价学生的发音像珍珠了，使用更多变的评价。
+
+【锁定知识点规则——最高优先级】：
+老师填写的具体错误内容将由程序在生成结束后自动插入，
+你绝对不要自行改写、概括或重新解释这些内容。
+如果存在单词问题，请在最自然的位置原样输出：
+[[WORD_ERRORS]]
+如果存在短语/句子问题，请在最自然的位置原样输出：
+[[PHRASE_ERRORS]]
+这些标记必须完整保留，不要修改字符，不要添加内容到标记内部。
+不要在其他位置重复描述具体错误。
 
 【错误反馈规则——极其重要，必须严格遵守】：
 - 单词发音问题：多个单词时合并成一句，格式为「注意【单词1】、【单词2】、【单词3】的发音」，不要每个单词单独一句。如果某个单词有原因，在该单词后用括号补充，如「注意【fantastic】（i读成了e）、【hotel】的发音」。只有一个单词时正常写「注意【xxx】的发音」。绝对不要自己猜测或编造原因。
@@ -185,13 +229,13 @@ export default async function handler(req, res) {
 表现亮点：${praises || '无'}
 建议指导：${advices || '无'}
 错误标注（分类）：
-${errorPrompt || '无'}
+单词发音问题：${lockedWordText ? '有，请在自然位置使用 [[WORD_ERRORS]]' : '无'}
+短语/句子问题：${lockedPhraseText ? '有，请在自然位置使用 [[PHRASE_ERRORS]]' : '无'}
 个性化观察/补充要求：${personal || '无'}${toneSection}`;
 
-        const result = await callDeepSeekWithRetry({
+    let result = await callDeepSeekWithRetry({
     model: "deepseek-v4-flash",
 
-    // 保留你目前使用的思考模式设置
     thinking: {
         type: "disabled"
     },
@@ -202,10 +246,43 @@ ${errorPrompt || '无'}
     ],
 
     temperature: 0.7,
-
-    // 你只需要约 150 字的反馈，不需要无限生成
     max_tokens: 500
 });
+
+
+// 插入老师原始填写的单词问题
+if (lockedWordText) {
+    if (result.includes('[[WORD_ERRORS]]')) {
+        result = result.replace('[[WORD_ERRORS]]', lockedWordText);
+
+        // 如果 AI 意外重复输出占位符，删除多余的
+        result = result.replaceAll('[[WORD_ERRORS]]', '');
+    } else {
+        // AI 万一忘了占位符，仍然保证老师内容不会丢
+        result += `\n${lockedWordText}`;
+    }
+} else {
+    result = result.replaceAll('[[WORD_ERRORS]]', '');
+}
+
+
+// 插入老师原始填写的短语 / 句子问题
+if (lockedPhraseText) {
+    if (result.includes('[[PHRASE_ERRORS]]')) {
+        result = result.replace(
+            '[[PHRASE_ERRORS]]',
+            lockedPhraseText
+        );
+
+        result = result.replaceAll('[[PHRASE_ERRORS]]', '');
+    } else {
+        // AI 万一忘了占位符，仍然保证老师内容不会丢
+        result += `\n${lockedPhraseText}`;
+    }
+} else {
+    result = result.replaceAll('[[PHRASE_ERRORS]]', '');
+}
+
 
 res.status(200).json({ result });
 
