@@ -166,8 +166,6 @@ const wordReadOnlyText = wordItems.length
             : `- ${text}｜未填写具体错误点`;
     }).join('\n')
     : '无';
-        
-const wordErrorCount = wordItems.length;
 
     // 短语 / 句子分成两类：默认原样保留；勾选后交给 AI 扩写
 
