@@ -321,13 +321,23 @@ ${phrasePromptText}
 // 防止 AI 给占位符额外套上【】
 result = result
     .replaceAll('【[[WORD_ERRORS]]】', '[[WORD_ERRORS]]');
+
 // 插入老师原始填写的单词问题
 if (lockedWordText) {
     if (result.includes('[[WORD_ERRORS]]')) {
+
+        // 如果占位符后面直接连接文字，没有标点，则自动补句号
+        result = result.replace(
+            /\[\[WORD_ERRORS\]\](?!\s*[。！？；，：,.!?;:])/,
+            '[[WORD_ERRORS]]。'
+        );
+
+        // 插入老师原始填写的单词问题
         result = result.replace('[[WORD_ERRORS]]', lockedWordText);
 
         // 如果 AI 意外重复输出占位符，删除多余的
         result = result.replaceAll('[[WORD_ERRORS]]', '');
+
     } else {
         // AI 万一忘了占位符，仍然保证老师内容不会丢
         result += `\n${lockedWordText}`;
@@ -335,7 +345,6 @@ if (lockedWordText) {
 } else {
     result = result.replaceAll('[[WORD_ERRORS]]', '');
 }
-
 res.status(200).json({ result });
 
     } catch (error) {
