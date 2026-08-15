@@ -152,6 +152,8 @@ module.exports = async function handler(req, res) {
 const phraseItems = Array.isArray(errorItems?.phrase)
     ? errorItems.phrase
     : [];
+        
+const wordErrorCount = wordItems.length;
 
     // 短语 / 句子分成两类：默认原样保留；勾选后交给 AI 扩写
 
@@ -224,7 +226,12 @@ const phrasePromptText = phraseItems.length
 3. 不使用比喻式、过度夸张的评价。
 4. 不要自行创造【出现问题的单词】【这些单词】【错误单词】等概括性方括号内容。
 5. 相邻反馈可以变化开头、句式和夸奖角度，但不要求每次完全不同。
-6. 单词数量与称呼必须一致：只有1个单词问题时，禁止使用“这些单词”“这几个单词”“以上单词”等复数表达，应直接写具体单词或使用“这个单词”；只有2个及以上单词问题时，才能使用复数称呼。
+
+【单词数量与称呼规则】：
+“单词发音问题数量”是程序提供的真实数量，必须严格按照该数量组织语言。
+- 数量为1时，只能使用单数表达，例如“这个单词”“该单词”，或直接衔接 [[WORD_ERRORS]]；禁止使用“几个单词”“这些单词”“这几个词”“以上单词”等复数表达。
+- 数量为2个及以上时，才可以使用“这些单词”“这几个单词”等复数表达。
+- 不得根据 [[WORD_ERRORS]] 自行猜测数量，必须以“单词发音问题数量”为准。
 
 【内容基调要求】：
 1. 遵循肯定亮点 + 温和建议 + 期待升华。
@@ -263,6 +270,7 @@ const phrasePromptText = phraseItems.length
 作业等级：${level || '未知'}
 表现亮点：${praises || '无'}
 建议指导：${advices || '无'}
+单词发音问题数量：${wordErrorCount}
 单词发音问题：${lockedWordText ? '[[WORD_ERRORS]]' : '无'}
 
 短语/句子错误点：
