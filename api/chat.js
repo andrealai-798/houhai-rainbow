@@ -320,9 +320,17 @@ ${phrasePromptText}
     max_tokens: 500
 });
 
-// 防止 AI 给占位符额外套上【】
-result = result
-    .replaceAll('【[[WORD_ERRORS]]】', '[[WORD_ERRORS]]');
+// 统一修复 AI 对 WORD_ERRORS 占位符的各种错误包装
+result = result.replace(
+    /【+\s*\[\[\s*WORD_ERRORS\s*\]\]\s*】+/g,
+    '[[WORD_ERRORS]]'
+);
+
+// 再处理没有【】、但内部意外多了空格的情况
+result = result.replace(
+    /\[\[\s*WORD_ERRORS\s*\]\]/g,
+    '[[WORD_ERRORS]]'
+);
 
 // 插入老师原始填写的单词问题
 if (lockedWordText) {
@@ -335,17 +343,26 @@ if (lockedWordText) {
         );
 
         // 插入老师原始填写的单词问题
-        result = result.replace('[[WORD_ERRORS]]', lockedWordText);
+        result = result.replace(
+            '[[WORD_ERRORS]]',
+            lockedWordText
+        );
 
         // 如果 AI 意外重复输出占位符，删除多余的
-        result = result.replaceAll('[[WORD_ERRORS]]', '');
+        result = result.replaceAll(
+            '[[WORD_ERRORS]]',
+            ''
+        );
 
     } else {
-        // AI 万一忘了占位符，仍然保证老师内容不会丢
+        // AI 真正漏掉占位符时，才追加老师内容
         result += `\n${lockedWordText}`;
     }
 } else {
-    result = result.replaceAll('[[WORD_ERRORS]]', '');
+    result = result.replaceAll(
+        '[[WORD_ERRORS]]',
+        ''
+    );
 }
 res.status(200).json({ result });
 
